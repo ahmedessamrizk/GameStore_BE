@@ -1,39 +1,52 @@
 import jwt from 'jsonwebtoken'
-import { userModel } from './../../DB/models/user.model.js';
+import userModel from '../../DB/models/user.model.js';
+import { asyncHandler } from './asyncHandler.js';
 
-export const role = {
-    Admin: 'Admin',
-    User: 'User'
+export const roles = {
+    admin: "admin",
+    user: "user",
+    superAdmin: "superAdmin"
 }
+export const allRoles = [roles.admin, roles.user, roles.HR]
 
-export const auth = (accessRoles = []) => {
-    return async (req, res, next) => {
-        try {
-            const { authorization } = req.headers;
-            if (!authorization?.startsWith(process.env.BEARERKEY)) {
-                res.status(400).json({ message: "Invalid bearer" });
-            } else {
-                const token = authorization.split(process.env.BEARERKEY)[1];
-                const decoded = jwt.verify(token, process.env.EMAILTOKEN);
-                if (!decoded?.id) {
-                    res.status(400).json({ message: "Invalid payload data" });
-                } else {
-                    const user = await userModel.findById(decoded.id).select('userName role');
-                    if (!user) {
-                        res.status(404).json({ message: "Invalid id" });
-                    } else {
+const auth = (accessRoles = []) => {
+    return asyncHandler(async (req, res, next) => {
+        const { authorization } = req.headers
+        if (authorization.startsWith(process.env.BEARERKEY)) {
+            const decoded = jwt.verify(authorization.split(process.env.BEARERKEY)[1], process.env.SIGNINKEY)
+            if (decoded?._id) {
+                const user = await userModel.findOne({ _id: decoded._id }).select("role userName isBlocked confirmEmail isDeleted")
+                if (user) {
+                    const { err, cause } = checkUser(user, ['isDeleted', 'isBlocked', 'isConfirmed'])
+                    if (!err) {
                         if (accessRoles.includes(user.role)) {
-                            req.user = user;
-                            next();
+                            req.user = { _id: user._id, role: user.role, userName: user.userName }
+                            next()
+                        } else {
+                            next(Error("you don't have the permission", { cause: 403 }))
+
                         }
-                        else {
-                            res.status(403).json({ message: "Not authorized" });
-                        }
+                    } else {
+                        next(Error(" the current signed User :" + err, { cause }))
                     }
+
+
+                } else {
+                    next(Error("This user was deleted or blocked or not confirmed yet, please contact the administrator", { cause: 401 }))
+
                 }
+            } else {
+                next(Error("authorization error (payload)", { cause: 401 }))
+
             }
-        } catch (error) {
-            res.status(400).json({ message: "Catch error", error })
+        } else {
+            // res.status(401).json({ message: "authorization error (bearerKey)" })
+            next(Error("authorization error (bearerKey)", { cause: 401 }))
+
         }
+
     }
+    )
 }
+
+export default auth
