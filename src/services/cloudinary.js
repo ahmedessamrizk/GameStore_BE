@@ -1,9 +1,13 @@
 import cloudinary from 'cloudinary'
+import path from 'path'
+import { fileURLToPath } from 'url'
+const dirname = path.dirname(fileURLToPath(import.meta.url))
+dotenv.config({ path: path.join(dirname, './../../config/.env') })
 
-cloudinary.v2.config({ 
-    cloud_name: 'ddpckjxeg', 
-    api_key: '312136421383332', 
-    api_secret: 'D9Zq9PRN8z_blfiN45T_EtzMimM' 
-  });
+cloudinary.v2.config({
+  cloud_name: process.env.cloud_name,
+  api_key: process.env.api_key,
+  api_secret: process.env.api_secret
+});
 
 export default cloudinary.v2;

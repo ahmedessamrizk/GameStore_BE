@@ -15,7 +15,7 @@ export const sendEmail = async (email, subject, html, attachments) => {
 
     // send mail with defined transport object
     let info = await transporter.sendMail({
-      from: `"UpVote Online" <${process.env.SENDEREMAIL}>`, // sender address
+      from: `"GameStore" <${process.env.SENDEREMAIL}>`, // sender address
       to: email, // list of receivers
       subject,
       html,
