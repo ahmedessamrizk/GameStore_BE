@@ -7,6 +7,6 @@ const commentSchema = new Schema({
 })
 
 
-export const commentModel = model('Comment', commentSchema)
+const commentModel = model('Comment', commentSchema)
 
-
+export default commentModel

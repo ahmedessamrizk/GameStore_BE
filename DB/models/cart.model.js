@@ -7,6 +7,8 @@ const cartSchema = new Schema({
 })
 
 
-export const cartModel = model('Cart', cartSchema)
+const cartModel = model('Cart', cartSchema)
+
+export default cartModel
 
 
