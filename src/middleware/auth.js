@@ -7,7 +7,7 @@ export const roles = {
     user: "user",
     superAdmin: "superAdmin"
 }
-export const allRoles = [roles.admin, roles.user, roles.HR]
+export const allRoles = [roles.admin, roles.user, roles.superAdmin]
 
 const auth = (accessRoles = []) => {
     return asyncHandler(async (req, res, next) => {
