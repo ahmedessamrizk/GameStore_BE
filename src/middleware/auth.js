@@ -17,7 +17,7 @@ const auth = (accessRoles = []) => {
             if (decoded?._id) {
                 const user = await userModel.findOne({ _id: decoded._id }).select("role userName isBlocked confirmEmail isDeleted")
                 if (user) {
-                    const { err, cause } = checkUser(user, ['isDeleted', 'isBlocked', 'isConfirmed'])
+                    const { err, cause } = checkUser(user, ['isDeleted', 'isBlocked', 'confirmEmail'])
                     if (!err) {
                         if (accessRoles.includes(user.role)) {
                             req.user = { _id: user._id, role: user.role, userName: user.userName }
