@@ -7,6 +7,6 @@ const genreSchema = new Schema({
 })
 
 
-export const genreModel = model('Genre', genreSchema)
+const genreModel = model('Genre', genreSchema)
 
-
+export default genreModel
