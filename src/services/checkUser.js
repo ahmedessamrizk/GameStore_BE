@@ -20,7 +20,7 @@ export const checkUser = (user, checkFor = ['']) => {
 
         return { err, cause }
     } catch (error) {
-        return { err: "err while checking yser", cause: 400 }
+        return { err: "err while checking user", cause: 400 }
     }
 
 }
