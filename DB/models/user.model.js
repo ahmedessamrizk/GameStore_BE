@@ -11,7 +11,8 @@ const userSchema = new Schema({
         type: String,
         required:[true, "userName is required"],
         min:[3,"Length of userName must be more than 3"],
-        max:[20, "Length of userName must be more than 20"]
+        max:[20, "Length of userName must be more than 20"],
+        unique: [true, 'userName should be unique']
     },
     firstName:{
         type: String,
@@ -33,7 +34,8 @@ const userSchema = new Schema({
         type: String,
         required:[true, "email is required"],
         min:[5,"Length of email must be more than 5"],
-        max:[50, "Length of email must be more than 50"]
+        max:[50, "Length of email must be more than 50"],
+        unique: [true, 'email must be unique']
     },
     password:{
         type: String,
@@ -95,7 +97,10 @@ const userSchema = new Schema({
             type: Types.ObjectId,
             ref: 'Game'
     }}],
-
+    code: {
+        type: String,
+        default: null
+    }
 
 }, {
     timestamps: true

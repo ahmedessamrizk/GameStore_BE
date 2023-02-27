@@ -1,28 +1,32 @@
 import nodemailer from "nodemailer"
+import dotenv from 'dotenv'
+import path from 'path'
+import { fileURLToPath } from 'url'
+const dirname = path.dirname(fileURLToPath(import.meta.url))
+dotenv.config({ path: path.join(dirname, '../../config/.env') })
 
-export const sendEmail = async (email, subject, html, attachments) => {
+export const sendEmail = async (dest, subject, message, attachments = []) => {
   try {
     let transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: process.env.SENDEREMAIL, // generated ethereal user
-        pass: process.env.SENDERPASSWORD, // generated ethereal password
+        user: process.env.SENDEREMAIL,
+        pass: process.env.SENDERPASSWORD
       },
       tls: {
         rejectUnauthorized: false
       }
-    });
+    })
 
-    // send mail with defined transport object
     let info = await transporter.sendMail({
-      from: `"GameStore" <${process.env.SENDEREMAIL}>`, // sender address
-      to: email, // list of receivers
+      from: 'GameStore <${process.env.SENDEREMAIL}>',
+      to: dest,
       subject,
-      html,
+      html: message,
       attachments
-    });
-    return info;
+    })
+    return info
   } catch (error) {
-    console.log("Catch error!", error);
+    console.log(error);
   }
 }

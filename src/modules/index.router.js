@@ -7,13 +7,17 @@ import cartRouter from './cart/cart.router.js'
 import morgan from 'morgan'
 import cors from 'cors'
 import express from 'express'
+import passport from 'passport'
+import * as passportSetup from '../services/passportSetup.js'
 import { connectDB } from '../../DB/connection.js'
 import { globalErrorHandling } from '../middleware/asyncHandler.js'
 
 
+
 export const appRouter = (app) => {
-    app.use(express.json());
-    app.use(express.urlencoded({extended: false}))
+    app.use(express.json({}));
+    app.use(express.urlencoded({extended: true}))
+    app.use(passport.initialize())
     app.use(cors({}));
     //Returns request endpoint and time taken to execute it
     if (process.env.MODE === 'DEV') {
@@ -52,6 +56,7 @@ export const appRouter = (app) => {
     import path from 'path'
     import { fileURLToPath } from 'url'
     const dirname = path.dirname(fileURLToPath(import.meta.url))
-    dotenv.config({ path: path.join(dirname, './config/.env') })
+    dotenv.config({ path: path.join(dirname, '.import { passport } from 'passport';
+/config/.env') })
     */
 }
