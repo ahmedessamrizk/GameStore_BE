@@ -55,7 +55,7 @@ export const deleteOne = async ({ model, filter = {} } = {}) => {
 
 
 //create methods
-export const create = async ({ model, data = {}, select = "", populate = [] } = {}) => {
+export const create = async ({ model, data = {} } = {}) => {
     const result = await model.create(data)
     return result
 }
