@@ -1,7 +1,7 @@
 import multer from 'multer'
 
 export const fileFormat = {
-    image: ['image/png', 'image/jpeg', 'image/jif'],
+    image: ['image/png', 'image/jpeg', 'image/gif'],
     pdf: ['application/pdf']
 }
 

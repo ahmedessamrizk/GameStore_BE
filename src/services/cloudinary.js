@@ -1,5 +1,6 @@
 import cloudinary from 'cloudinary'
 import path from 'path'
+import dotenv from 'dotenv'
 import { fileURLToPath } from 'url'
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: path.join(dirname, './../../config/.env') })
