@@ -1,9 +1,8 @@
-
 import slugify from 'slugify';
 import { asyncHandler } from './../../../middleware/asyncHandler.js';
 import { create, findById, findOne, updateOne, deleteOne } from './../../../../DB/DBmethods.js';
 import genreModel from './../../../../DB/models/genre.model.js';
-import { roles } from './../../../middleware/auth.js';
+import { roles } from '../../../../DB/models/user.model.js';
 import cloudinary from './../../../services/cloudinary.js';
 
 const default_secure_url = "https://res.cloudinary.com/dpiwjrxdt/image/upload/v1677506316/genre/Agenre_py9lkw.png"

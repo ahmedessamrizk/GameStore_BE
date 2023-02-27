@@ -7,41 +7,43 @@ export const roles = {
 }
 
 const userSchema = new Schema({
-    userName:{
+    userName: {
         type: String,
-        required:[true, "userName is required"],
-        min:[3,"Length of userName must be more than 3"],
-        max:[20, "Length of userName must be more than 20"],
+        required: [true, "userName is required"],
+        min: [3, "Length of userName must be more than 3"],
+        max: [20, "Length of userName must be more than 20"],
         unique: [true, 'userName should be unique']
     },
-    firstName:{
+    firstName: {
         type: String,
-        required:[true, "firstName is required"],
-        min:[2,"Length of firstName must be more than 2"],
-        max:[10, "Length of firstName must be more than 10"]
+        required: [true, "firstName is required"],
+        min: [2, "Length of firstName must be more than 2"],
+        max: [10, "Length of firstName must be more than 10"]
     },
-    lastName:{
+    lastName: {
         type: String,
-        required:[true, "lastName is required"],
-        min:[2,"Length of lastName must be more than 2"],
-        max:[10, "Length of lastName must be more than 10"]
+        required: [true, "lastName is required"],
+        min: [2, "Length of lastName must be more than 2"],
+        max: [10, "Length of lastName must be more than 10"]
     },
-    DOB:{
+    DOB: {
         type: Date,
         required: [true, "Date is required"],
     },
-    email:{
+    age: Number,
+    lastSeen: Date,
+    email: {
         type: String,
-        required:[true, "email is required"],
-        min:[5,"Length of email must be more than 5"],
-        max:[50, "Length of email must be more than 50"],
+        required: [true, "email is required"],
+        min: [5, "Length of email must be more than 5"],
+        max: [50, "Length of email must be more than 50"],
         unique: [true, 'email must be unique']
     },
-    password:{
+    password: {
         type: String,
         required: [true, "password is required"],
-        min:[8,"Length of password must be more than 8"],
-        max:[20, "Length of password must be more than 20"]
+        min: [8, "Length of password must be more than 8"],
+        max: [20, "Length of password must be more than 20"]
     },
     phone: String,
     profilePic: {
@@ -69,8 +71,8 @@ const userSchema = new Schema({
         type: Boolean,
         default: false
     },
-    following: [{type: Types.ObjectId, ref: 'User'}],
-    wishList: [{type: Types.ObjectId, ref: 'Game'}],
+    following: [{ type: Types.ObjectId, ref: 'User' }],
+    wishList: [{ type: Types.ObjectId, ref: 'Game' }],
     role: {
         type: String,
         enum: [roles.admin, roles.user, roles.superAdmin],
@@ -86,17 +88,19 @@ const userSchema = new Schema({
         default: 'male'
     },
     activity: [{
-        message: String, 
-        gameId:{
+        message: String,
+        gameId: {
             type: Types.ObjectId,
             ref: 'Game'
-    }}],
+        }
+    }],
     notifications: [{
-        message: String, 
-        gameId:{
+        message: String,
+        gameId: {
             type: Types.ObjectId,
             ref: 'Game'
-    }}],
+        }
+    }],
     code: {
         type: String,
         default: null

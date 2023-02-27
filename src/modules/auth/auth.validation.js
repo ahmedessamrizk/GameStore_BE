@@ -42,6 +42,6 @@ export const recoverPassword = {
         newPassword: joi.string().pattern(new RegExp(/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/)).required().messages({
             'string.pattern.base': 'Minimum eight, at least one uppercase letter, one lowercase letter, one number and one special character'
         }),
-        
+
     })
 }

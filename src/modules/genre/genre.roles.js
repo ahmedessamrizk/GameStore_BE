@@ -1,4 +1,4 @@
-import { roles } from "../../middleware/auth.js";
+import { roles } from "../../../DB/models/user.model.js";
 
 
 export const genreRoles = {

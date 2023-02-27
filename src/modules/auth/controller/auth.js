@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken'
 import { sendEmail } from './../../../services/email.js';
 import { checkUser } from './../../../services/checkUser.js';
 import { nanoid } from 'nanoid';
+import { calcDate } from './../../user/controller/user.js';
 
 export const signUp = asyncHandler(
     async (req, res, next) => {
@@ -63,13 +64,14 @@ export const signIn = asyncHandler(
         const { password } = req.body;
         let { email } = req.body;
         email = email.toLowerCase();
-        const user = await findOne({ model: userModel, filter: { email }, select: "email password confirmEmail isDeleted isBlocked" });
+        const user = await findOne({ model: userModel, filter: { email }, select: "email password confirmEmail isDeleted isBlocked DOB" });
         if (user) {
             const match = bcrypt.compareSync(password, user.password);
             if (match) {
                 const { err, cause } = checkUser(user, ['isDeleted', 'isBlocked', 'confirmEmail']);
                 if (!err) {
-                    await findByIdAndUpdate({ model: userModel, filter: { _id: user._id }, data: { isOnline: true }, select: "email" });
+                    const age = calcDate(user.DOB);
+                    await findByIdAndUpdate({ model: userModel, filter: { _id: user._id }, data: { isOnline: true, age, lastSeen:null }, select: "email" });
                     const token = jwt.sign({ id: user._id }, process.env.SIGNINKEY, { expiresIn: '12h' });
                     return res.status(200).json({ message: "done", token });
                 } else {
