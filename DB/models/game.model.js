@@ -66,8 +66,11 @@ const gameSchema = new Schema({
         },
         rate: {
             type: Number,
-            required: [true, 'rate is required']
-        }
+            required: [true, 'rate is required'],
+            min:[0,"rate can't be negative"],
+            max:[5,"rate can't be negative"],
+        },
+        _id: false
     }]
 }, {
     timestamps: true

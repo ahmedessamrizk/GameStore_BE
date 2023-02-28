@@ -2,12 +2,13 @@ import multer from 'multer'
 
 export const fileFormat = {
     image: ['image/png', 'image/jpeg', 'image/jif'],
+    video: ['video/mov','video/mkv','video/webm','video/mp4','video/gif','image/gif'],
     pdf: ['application/pdf']
 }
 
-export const HME = (err,req,res,next) => {
+export const HME = (err, req, res, next) => {
     if (err) {
-        res.status(400).json({message: "multer error", err})
+        res.status(400).json({ message: "multer error", err })
     } else {
         next()
     }
@@ -15,17 +16,15 @@ export const HME = (err,req,res,next) => {
 
 export const myMulter = (customValidation = fileFormat.image) => {
     const storage = multer.diskStorage({});
-    function fileFilter (req, file, cb) {
-        if(!customValidation.includes(file.mimetype))
-        {
+    function fileFilter(req, file, cb) {
+        if (!customValidation.includes(file.mimetype)) {
             cb("Invalid format", false)
         }
-        else
-        {
+        else {
             cb(null, true);
         }
-      }
-    
-      const upload = multer({ fileFilter, storage })
-      return upload;
+    }
+
+    const upload = multer({ fileFilter, storage })
+    return upload;
 }
