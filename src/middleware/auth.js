@@ -2,7 +2,8 @@ import jwt from 'jsonwebtoken'
 import userModel from '../../DB/models/user.model.js';
 import { asyncHandler } from './asyncHandler.js';
 import { roles } from '../../DB/models/user.model.js';
- 
+import { checkUser } from './../services/checkUser.js';
+
 export const allRoles = [roles.admin, roles.user, roles.superAdmin]
 
 const auth = (accessRoles = []) => {
@@ -10,8 +11,8 @@ const auth = (accessRoles = []) => {
         const { authorization } = req.headers
         if (authorization.startsWith(process.env.BEARERKEY)) {
             const decoded = jwt.verify(authorization.split(process.env.BEARERKEY)[1], process.env.SIGNINKEY)
-            if (decoded?._id) {
-                const user = await userModel.findOne({ _id: decoded._id }).select("role userName isBlocked confirmEmail isDeleted")
+            if (decoded?.id) {
+                const user = await userModel.findOne({ _id: decoded.id }).select("role userName isBlocked confirmEmail isDeleted")
                 if (user) {
                     const { err, cause } = checkUser(user, ['isDeleted', 'isBlocked', 'confirmEmail'])
                     if (!err) {
