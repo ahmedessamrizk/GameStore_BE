@@ -8,11 +8,16 @@ import { sendEmail } from './../../../services/email.js';
 import { checkUser } from './../../../services/checkUser.js';
 import { nanoid } from 'nanoid';
 import { calcDate } from './../../user/controller/user.js';
+import cloudinary from '../../../services/cloudinary.js';
+
+const defaultPublicId = "Users/xla2re0yabzzuzwt0jat";
+const secureURL = "https://res.cloudinary.com/dpiwjrxdt/image/upload/v1677599795/Users/xla2re0yabzzuzwt0jat.webp";
 
 export const signUp = asyncHandler(
     async (req, res, next) => {
-        const { userName, password, phone, DOB } = req.body;
-        let { email } = req.body;
+        const { password, phone, DOB } = req.body;
+        let { email, userName } = req.body;
+        userName = userName.toLowerCase()
         email = email.toLowerCase();
         const checkEmail = await findOne({ model: userModel, filter: { email }, select: "email" });
         if (!checkEmail) {
@@ -45,9 +50,9 @@ export const confirmEmail = asyncHandler(
     async (req, res, next) => {
         const { token } = req.params;
         const decoded = jwt.decode(token, process.env.SIGNUPKEY);
-        console.log(decoded);
         if (decoded?.email) {
-            const user = await findOneAndUpdate({ model: userModel, filter: { email: decoded.email, confirmEmail: false }, data: { confirmEmail: true }, select: 'confirmEmail email', options: { new: true } });
+            const profilePic = { secure_url: secureURL, public_id: defaultPublicId }
+            const user = await findOneAndUpdate({ model: userModel, filter: { email: decoded.email, confirmEmail: false }, data: { confirmEmail: true, profilePic }, select: 'confirmEmail email', options: { new: true } });
             if (user) {
                 return process.env.MODE == "DEV" ? res.status(200).json({ message: "done" }) : res.redirect(process.env.HEADERSHOST);
             } else {
@@ -71,7 +76,7 @@ export const signIn = asyncHandler(
                 const { err, cause } = checkUser(user, ['isDeleted', 'isBlocked', 'confirmEmail']);
                 if (!err) {
                     const age = calcDate(user.DOB);
-                    await findByIdAndUpdate({ model: userModel, filter: { _id: user._id }, data: { isOnline: true, age, lastSeen:null }, select: "email" });
+                    await findByIdAndUpdate({ model: userModel, filter: { _id: user._id }, data: { isOnline: true, age, lastSeen: null }, select: "email" });
                     const token = jwt.sign({ id: user._id }, process.env.SIGNINKEY, { expiresIn: '12h' });
                     return res.status(200).json({ message: "done", token });
                 } else {
@@ -146,23 +151,29 @@ export const googleFail = asyncHandler(
 export const googleSign = asyncHandler(
     async (req, res, next) => {
         const { provider, displayName, given_name, family_name,
-            email_verified, email, picture } = req.user
+            email_verified, email, picture, id } = req.user
         console.log(req.user);
         if (!email_verified) {
             return next(Error("In-valid google account", { cause: 400 }))
         }
         const user = await findOne({ model: userModel, filter: { email } })
         if (user) {
+            const { err, cause } = checkUser(user, ['isDeleted isBlocked']);
+            if (err) {
+                return next(Error(err, { cause }));
+            }
             await findByIdAndUpdate({ model: userModel, filter: { _id: user._id }, data: { isOnline: true }, select: "email" });
             const token = jwt.sign({ id: user._id },
                 process.env.SIGNINKEY, { expiresIn: '12h' })
             return res.json({ message: "done", token })
         }
+        //Random password
         const code = nanoid();
         const hash = bcrypt.hashSync(code, +process.env.SALTROUND)
         // signup
+        const userName = email.split('@')[0] + id;
         const newUser = await userModel.create({
-            userName: displayName,
+            userName,
             firstName: given_name,
             lastName: family_name,
             email,
@@ -171,7 +182,8 @@ export const googleSign = asyncHandler(
             password: hash,
             DOB: Date.now()
         })
-        const token = jwt.sign({ id: newUser._id, isLoggedIn: true }, 'SocialLoginProjectRoute')
-        return res.json({ message: "done", details: "check email for password", token })
+        await cloudinary.uploader.upload(picture, { folder: `Users/${userName}-${newUser._id}/profilePic` })
+        const token = jwt.sign({ id: newUser._id, isOnline: true }, process.env.SIGNINKEY)
+        return res.json({ message: "done", token })
     }
 )

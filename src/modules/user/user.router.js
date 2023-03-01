@@ -5,12 +5,14 @@ import { userRoles } from './user.roles.js';
 import { myMulter, fileFormat, HME } from './../../services/multer.js';
 
 const router = Router();
-
+//myMulter - validation - auth - function
 router.put('/profile/update', auth(userRoles.updateProfile), userController.updateProfile);
-router.patch('/profilePic', auth(userRoles.updateProfile), myMulter(fileFormat.image).single('image'), HME, userController.addProfilePic);
-router.patch('/covPics', auth(userRoles.updateProfile), myMulter(fileFormat.image).array('image', 5), HME, userController.addCovPics);
+router.patch('/profilePic',  myMulter(fileFormat.image).single('image'), auth(userRoles.updateProfile), userController.addProfilePic);
+router.patch('/covPics', myMulter(fileFormat.image).array('image', 5), auth(userRoles.updateProfile), userController.addCovPics);
 router.patch('/delete/:userId', auth(userRoles.removeUser), userController.deleteUser);
-router.patch('/block/:userId', auth(userRoles.removeUser), userController.blockUser);
+router.patch('/block/:userId', auth(userRoles.deleteOrBlockUser), userController.blockUser);
+router.patch('/undelete/:userId', auth(userRoles.deleteOrBlockUser), userController.unDeleteUser);
+router.patch('/unblock/:userId', auth(userRoles.deleteOrBlockUser), userController.unBlockUser);
 router.patch('/role/:userId', auth(userRoles.deleteOrBlockUser), userController.addRole);
 router.patch('/following/add/:userId', auth(userRoles.add), userController.addFollowing);
 router.patch('/following/remove/:userId', auth(userRoles.add), userController.removeFollowing);
