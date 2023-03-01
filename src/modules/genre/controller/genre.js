@@ -16,9 +16,9 @@ export const addGenre = asyncHandler(
             req.body.slug = slug
             req.body.createdBy = req.user._id
             await create({ model: genreModel, data: req.body })
-            res.status(200).json({ message: "done" })
+            return res.status(201).json({ message: "done" })
         } else {
-            next(Error("Genre already exits", { cause: 400 }))
+            return next(Error("Genre already exists", { cause: 409 }))
         }
     }
 )
@@ -46,14 +46,14 @@ export const addImage = asyncHandler(
                 }
                 req.body.image = { secure_url, public_id }
                 await create({ model: genreModel, data: req.body })
-                res.status(200).json({ message: "done" })
+                return res.status(200).json({ message: "done" })
 
                 updated.modifiedCount ? res.status(200).json({ message: "done" }) : next(Error("Something went wrong", { cause: 400 }))
             } else {
-                next(Error("You don't have the permission", { cause: 403 }))
+                return next(Error("You don't have the permission", { cause: 403 }))
             }
         } else {
-            next(Error("Invalid genre ID", { cause: 404 }))
+            return next(Error("Invalid genre ID", { cause: 404 }))
         }
 
     }
@@ -88,16 +88,16 @@ export const updateGenre = asyncHandler(
             if (ownerId === loggedUserId) {//updated by owner
                 req.body.updatedBy = genre.createdBy._id;
                 const updated = await updateOne({ model: genreModel, filter: { _id: genreId }, data: req.body })
-                updated.modifiedCount ? res.status(200).json({ message: "done" }) : next(Error("Something went wrong", { cause: 400 }))
+                return updated.modifiedCount ? res.status(200).json({ message: "done" }) : next(Error("Something went wrong", { cause: 400 }))
             } else if (req.user.role === roles.superAdmin) {// update by SA
                 req.body.updatedBy = req.user._id;
                 const updated = await updateOne({ model: genreModel, filter: { _id: genreId }, data: req.body })
-                updated.modifiedCount ? res.status(200).json({ message: "done" }) : next(Error("Something went wrong", { cause: 400 }))
+                return updated.modifiedCount ? res.status(200).json({ message: "done" }) : next(Error("Something went wrong", { cause: 400 }))
             } else {
-                next(Error("You don't have the permission", { cause: 403 }))
+                return next(Error("You don't have the permission", { cause: 403 }))
             }
         } else {
-            next(Error("Invalid genre ID", { cause: 404 }))
+            return next(Error("Invalid genre ID", { cause: 404 }))
         }
     }
 )
@@ -121,15 +121,15 @@ export const deleteGenre = asyncHandler(
                     if (genre.image.public_id !== default_public_id) {
                         await cloudinary.uploader.destroy(genre.image.public_id)
                     }
-                    res.status(200).json({ message: "done" })
+                    return res.status(200).json({ message: "done" })
                 } else {
-                    next(Error("Something went wrong", { cause: 400 }))
+                    return next(Error("Something went wrong", { cause: 400 }))
                 }
             } else {
-                next(Error("You don't have the permission", { cause: 403 }))
+                return next(Error("You don't have the permission", { cause: 403 }))
             }
         } else {
-            next(Error("Invalid genre ID", { cause: 404 }))
+            return next(Error("Invalid genre ID", { cause: 404 }))
         }
     }
 )
