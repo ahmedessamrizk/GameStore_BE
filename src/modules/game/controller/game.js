@@ -43,15 +43,11 @@ export const addGameVid = asyncHandler(
                 await cloudinary.uploader.destroy(vidExist.video.public_id, { resource_type: "video" })
             }
             const cloudinaryResult = await cloudinary.uploader.upload(video.path, { folder: `games/${req.user.userName}-${req.user._id}/video`, resource_type: "video" })
-            // console.log(cloudinaryResult)
-            //.then(result => console.log(result)).catch(err => console.log(err))
-
             req.body.video = { secure_url: cloudinaryResult.secure_url, public_id: cloudinaryResult.public_id }
-
             const game = await findOneAndUpdate({ model: gameModel, filter: { _id: gameId, createdBy: req.user._id }, data: req.body, options: { new: true }, select: "video" });
             return game ? res.status(200).json({ message: "done", game }) : next(Error("You don't have the permission ", { cause: 400 }))
         } else {
-            return next(Error("please upload the image/s", { cause: 400 }))
+            return next(Error("please upload the video", { cause: 400 }))
         }
     }
 )
@@ -97,7 +93,7 @@ export const removeGame = asyncHandler(
 export const updateGame = asyncHandler(
     async (req, res, next) => {
         const { gameId } = req.params
-        const game = await findOne({ model: gameModel, filter: { _id: gameId, isDeleted: false } })
+        const game = await findOne({ model: gameModel, filter: { _id: gameId, isDeleted: false, createdBy: req.user._id } })
         if (game) {
             const ownerId = JSON.stringify(game.createdBy._id)
             const loggedUserId = JSON.stringify(req.user._id)
@@ -118,10 +114,6 @@ export const updateGame = asyncHandler(
                 req.body.updatedBy = game.createdBy._id;
                 const updatedGame = await updateOne({ model: gameModel, filter: { _id: gameId }, data: req.body })
                 return updatedGame.modifiedCount ? res.status(200).json({ message: "done" }) : next(Error("Something went wrong", { cause: 400 }))
-            } else if (req.user.role === roles.superAdmin) {// update by SA
-                req.body.updatedBy = req.user._id;
-                const updatedGame = await updateOne({ model: gameModel, filter: { _id: gameId }, data: req.body })
-                return updatedGame.modifiedCount ? res.status(200).json({ message: "done" }) : next(Error("Something went wrong", { cause: 400 }))
             } else {
                 return next(Error("You don't have the permission", { cause: 403 }))
             }
@@ -140,6 +132,8 @@ export const updateGame = asyncHandler(
 //         const theRate = { userId: req.user._id, rate }
 //         const { ratings } = await findOne({ model: gameModel, filter: { _id: gameId }, select: "ratings" })
 //         for (const rate of ratings) {
+                //req.user._id == rate.userId ==> rate.val = rate
+                //calcRate(rate) ==> 
 //             if (JSON.stringify(theRate.userId) === JSON.stringify(rate.userId)) {
 //                 indicator = true
 //             }
