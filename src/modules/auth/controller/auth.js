@@ -152,7 +152,6 @@ export const googleSign = asyncHandler(
     async (req, res, next) => {
         const { provider, displayName, given_name, family_name,
             email_verified, email, picture, id } = req.user
-        console.log(req.user);
         if (!email_verified) {
             return next(Error("In-valid google account", { cause: 400 }))
         }
