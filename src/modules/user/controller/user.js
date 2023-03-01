@@ -1,12 +1,14 @@
 import userModel from "../../../../DB/models/user.model.js";
 import { asyncHandler } from "../../../middleware/asyncHandler.js";
-import { findByIdAndUpdate, findById, updateOne, find } from './../../../../DB/DBmethods.js';
+import { findByIdAndUpdate, findById, updateOne, find, findOne } from './../../../../DB/DBmethods.js';
 import CryptoJS from "crypto-js";
 import cloudinary from './../../../services/cloudinary.js';
 import { roles } from "../../../../DB/models/user.model.js";
 import bcrypt from 'bcryptjs'
+import { checkUser } from "../../../services/checkUser.js";
 
-let privateData = '-isDeleted -confirmEmail -isBlocked -password -code';
+const privateData = '-isDeleted -confirmEmail -isBlocked -password -code -wishList -accountType -activity -notifications';
+const secureURL = "https://res.cloudinary.com/dpiwjrxdt/image/upload/v1677599795/Users/xla2re0yabzzuzwt0jat.webp";
 
 export const calcDate = (date) => {
     const crrDate = new Date();
@@ -18,13 +20,17 @@ export const calcDate = (date) => {
 //update: userName firstName lastName DOB phone gender photos
 export const updateProfile = asyncHandler(
     async (req, res, next) => {
-        let { phone, DOB } = req.body;
+        let { phone, DOB, userName } = req.body;
         if (phone) {
             req.body.phone = CryptoJS.AES.encrypt(phone, process.env.CRYPTPHONESECRET).toString();
         }
         if (DOB) {
             DOB = new Date(DOB);
             req.body.age = calcDate(DOB);
+        }
+        const exist = await findOne({ model: userModel, filter: { userName }, select: 'userName' });
+        if (exist) {
+            return next(Error('duplicated userName', { cause: 409 }));
         }
         const updatedUser = await findByIdAndUpdate({ model: userModel, filter: { _id: req.user._id }, data: req.body, options: { new: true }, select: privateData });
         const bytes = CryptoJS.AES.decrypt(updatedUser.phone, process.env.CRYPTPHONESECRET);
@@ -38,6 +44,13 @@ export const addProfilePic = asyncHandler(
         if (!req.file) {
             return next(Error('please upload the image', { cause: 400 }));
         }
+        //Delete old image but not default image
+        const { profilePic } = await findById({ model: userModel, filter: { _id: req.user._id }, select: 'profilePic' });
+        if (profilePic.secure_url !== secureURL) {
+             cloudinary.uploader.destroy(profilePic.public_id);
+        }
+
+        //upload new image
         const { secure_url, public_id } = await cloudinary.uploader.upload(req.file.path, { folder: `Users/${req.user.userName}-${req.user._id}/profilePic` });
         req.body.profilePic = { secure_url, public_id };
         const updatedUser = await findByIdAndUpdate({ model: userModel, filter: { _id: req.user._id }, data: req.body, options: { new: true }, select: "profilePic" });
@@ -50,6 +63,10 @@ export const addCovPics = asyncHandler(
         if (!req.files) {
             return next(Error('please upload the image/s', { cause: 400 }));
         }
+        const { coverPics } = await findById({ model: userModel, filter: { _id: req.user._id }, select: 'coverPics' });
+        for (const pic of coverPics) {
+            cloudinary.uploader.destroy(pic.public_id);
+        }
         const imageURLs = [];
         for (const file of req.files) {
             const { secure_url, public_id } = await cloudinary.uploader.upload(file.path, { folder: `Users/${req.user.userName}-${req.user._id}/covPics` });
@@ -61,43 +78,66 @@ export const addCovPics = asyncHandler(
     }
 )
 
-//user can delete or block his account
-//superAdmin can delete or block anyone
 export const deleteUser = asyncHandler(
     async (req, res, next) => {
+        //check target userId
         const { userId } = req.params;
-        const user = await findById({ model: userModel, filter: { _id: userId }, select: 'userName' })
-        if (!user) {
-            return next(Error('not registered account', { cause: 404 }));
+        const user = await findById({ model: userModel, filter: { _id: userId }, select: 'userName isDeleted isBlocked' })
+
+        const { err, cause } = checkUser(user, ['isDeleted', 'isBlocked']);
+        if (err) {
+            return next(Error(err, { cause }));
         }
         let deleteUser;
+        //user can delete or block his account
         if (userId == req.user._id) {
             deleteUser = await updateOne({ model: userModel, filter: { _id: userId }, data: { isDeleted: true } });
-        } else {
+        } else {//superAdmin can delete or block anyone
             if (req.user.role == roles.superAdmin) {
                 deleteUser = await updateOne({ model: userModel, filter: { _id: userId, role: { $ne: roles.superAdmin } }, data: { isDeleted: true } });
             }
         }
-        return deleteUser?.modifiedCount ? res.status(200).json({ message: "done" }) : res.status(200).json({ message: "you don't have the permission" });
+        return deleteUser?.modifiedCount ? res.status(200).json({ message: "done" }) : next(Error("you don't have the permission", { cause: 403 }));
+    }
+)
+
+export const unDeleteUser = asyncHandler(
+    async (req, res, next) => {
+        //check target userId
+        const { userId } = req.params;
+        const user = await findById({ model: userModel, filter: { _id: userId }, select: 'userName isDeleted isBlocked' })
+        const { err, cause } = checkUser(user, ['isBlocked']);
+        if (err) {
+            return next(Error(err, { cause }));
+        }
+        const deleteUser = await updateOne({ model: userModel, filter: { _id: userId, role: { $ne: roles.superAdmin } }, data: { isDeleted: false } });
+        return deleteUser?.modifiedCount ? res.status(200).json({ message: "done" }) : next(Error("you don't have the permission", { cause: 403 }));
     }
 )
 
 export const blockUser = asyncHandler(
     async (req, res, next) => {
         const { userId } = req.params;
-        const checkUser = await findById({ model: userModel, filter: { _id: userId }, select: 'userName' })
-        if (!checkUser) {
-            return next(Error('not registered account', { cause: 404 }));
+        const user = await findById({ model: userModel, filter: { _id: userId }, select: 'userName isDeleted isBlocked' })
+        const { err, cause } = checkUser(user, ['isDeleted', 'isBlocked']);
+        if (err) {
+            return next(Error(err, { cause }));
         }
-        let deleteUser;
-        if (userId == req.user._id) {
-            deleteUser = await updateOne({ model: userModel, filter: { _id: userId }, data: { isBlocked: true } });
-        } else {
-            if (req.user.role == roles.superAdmin) {
-                deleteUser = await updateOne({ model: userModel, filter: { _id: userId, role: { $ne: roles.superAdmin } }, data: { isBlocked: true } });
-            }
+        const deleteUser = await updateOne({ model: userModel, filter: { _id: userId, role: { $ne: roles.superAdmin } }, data: { isBlocked: true } });
+        return deleteUser?.modifiedCount ? res.status(200).json({ message: "done" }) : next(Error("you don't have the permission", { cause: 403 }));
+    }
+)
+
+export const unBlockUser = asyncHandler(
+    async (req, res, next) => {
+        const { userId } = req.params;
+        const user = await findById({ model: userModel, filter: { _id: userId }, select: 'userName isDeleted isBlocked' })
+        const { err, cause } = checkUser(user, ['isDeleted']);
+        if (err) {
+            return next(Error(err, { cause }));
         }
-        return deleteUser?.modifiedCount ? res.status(200).json({ message: "done" }) : res.status(200).json({ message: "you don't have the permission" });
+        const deleteUser = await updateOne({ model: userModel, filter: { _id: userId, role: { $ne: roles.superAdmin } }, data: { isBlocked: false } });
+        return deleteUser?.modifiedCount ? res.status(200).json({ message: "done" }) : next(Error("you don't have the permission", { cause: 403 }));
     }
 )
 
@@ -110,13 +150,16 @@ export const addRole = asyncHandler(
         }
         const { role } = req.body;
         const user = await updateOne({ model: userModel, filter: { _id: userId, role: { $ne: roles.superAdmin } }, data: { role } });
-        return user.modifiedCount ? res.status(200).json({ message: "done" }) : res.status(200).json({ message: "you don't have the permission" });
+        return user.modifiedCount ? res.status(200).json({ message: "done" }) : next(Error("you don't have the permission", { cause: 403 }));
     }
 )
 
 export const addFollowing = asyncHandler(
     async (req, res, next) => {
         const { userId } = req.params;
+        if (JSON.stringify(userId) == JSON.stringify(req.user._id)) {
+            return next(Error("user can't follow himself", { cause: 400 }))
+        }
         const checkUser = await findById({ model: userModel, filter: { _id: userId }, select: 'userName' })
         if (!checkUser) {
             return next(Error('not registered account', { cause: 404 }));
@@ -195,13 +238,19 @@ export const signOut = asyncHandler(
 //filter by userName 
 export const getUsers = asyncHandler(
     async (req, res, next) => {
-        const { userNameQ } = req.query;
-        const users = await userModel.find({ userName: { $regex: `^${userNameQ}` } }, { isDeleted: 0, isBlocked: 0, confirmEmail: 0, password: 0, code: 0 }).populate([
+        let { userNameQ } = req.query;
+        userNameQ = userNameQ?.toLowerCase();
+        let users = await userModel.find({ userName: { $regex: `^${userNameQ}` }, isDeleted: false, isBlocked: false }).select(privateData).populate([
             {
                 path: 'following',
                 select: 'firstName lastName userName'
             }
         ])
+        users.forEach(user => {
+            if (user.phone) {
+                user.phone = CryptoJS.AES.decrypt(user.phone, process.env.CRYPTPHONESECRET).toString(CryptoJS.enc.Utf8);
+            }
+        });
         return res.status(200).json({ message: "done", users });
     }
 )
