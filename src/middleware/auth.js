@@ -9,7 +9,7 @@ export const allRoles = [roles.admin, roles.user, roles.superAdmin]
 const auth = (accessRoles = []) => {
     return asyncHandler(async (req, res, next) => {
         const { authorization } = req.headers
-        if (authorization.startsWith(process.env.BEARERKEY)) {
+        if (authorization?.startsWith(process.env.BEARERKEY)) {
             const decoded = jwt.verify(authorization.split(process.env.BEARERKEY)[1], process.env.SIGNINKEY)
             if (decoded?.id) {
                 const user = await userModel.findOne({ _id: decoded.id }).select("role userName isBlocked confirmEmail isDeleted")

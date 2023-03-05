@@ -3,10 +3,9 @@ import auth from '../../middleware/auth.js';
 import { gameRoles } from './game.roles.js';
 import { myMulter, fileFormat } from './../../services/multer.js';
 import * as gameController from './controller/game.js'
-import { allRoles } from './../../middleware/auth.js';
+import * as commentController from './controller/comment.js'
 
 const router = Router();
-
 
 // Add Game Data
 router.post('/add',
@@ -33,6 +32,18 @@ router.put('/:gameId/update',
     myMulter(fileFormat.image).single('mainPic'),
     auth(gameRoles.A_SA),
     gameController.updateGame)
+
+//addComment
+router.post('/:gameId/comment', auth(gameRoles.All), commentController.addComment)
+
+//removeComment
+router.delete('/:gameId/comment/:commentId', auth(gameRoles.All), commentController.removeComment)
+
+//updateComment
+router.put('/:gameId/comment/:commentId', auth(gameRoles.All), commentController.updateComment)
+
+//getComments
+router.get('/:gameId/comment', commentController.getComments)
 
 //ratings
 // router.patch('/:gameId/rate', auth(allRoles), gameController.addRate)

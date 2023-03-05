@@ -6,21 +6,17 @@ import cloudinary from './../../../services/cloudinary.js';
 import { roles } from "../../../../DB/models/user.model.js";
 import bcrypt from 'bcryptjs'
 import { checkUser } from "../../../services/checkUser.js";
+import { calcDate } from '../../../services/calcDate.js';
+import gameModel from './../../../../DB/models/game.model.js';
+import genreModel from './../../../../DB/models/genre.model.js';
 
-const privateData = '-isDeleted -confirmEmail -isBlocked -password -code -wishList -accountType -activity -notifications';
+const privateData = '-isDeleted -confirmEmail -isBlocked -password -code -accountType -activity -notifications';
 const secureURL = "https://res.cloudinary.com/dpiwjrxdt/image/upload/v1677599795/Users/xla2re0yabzzuzwt0jat.webp";
-
-export const calcDate = (date) => {
-    const crrDate = new Date();
-    let difference = crrDate.getTime() - date.getTime();
-    const years = Math.ceil(difference / (1000 * 3600 * 24));
-    return Math.floor(years / 365);
-}
 
 //update: userName firstName lastName DOB phone gender photos
 export const updateProfile = asyncHandler(
     async (req, res, next) => {
-        let { phone, DOB, userName } = req.body;
+        let { phone, DOB } = req.body;
         if (phone) {
             req.body.phone = CryptoJS.AES.encrypt(phone, process.env.CRYPTPHONESECRET).toString();
         }
@@ -28,10 +24,10 @@ export const updateProfile = asyncHandler(
             DOB = new Date(DOB);
             req.body.age = calcDate(DOB);
         }
-        const exist = await findOne({ model: userModel, filter: { userName }, select: 'userName' });
-        if (exist) {
-            return next(Error('duplicated userName', { cause: 409 }));
-        }
+        //const exist = await findOne({ model: userModel, filter: { userName }, select: 'userName' });
+        //if (exist) {
+        //  return next(Error('duplicated userName', { cause: 409 }));
+        //}
         const updatedUser = await findByIdAndUpdate({ model: userModel, filter: { _id: req.user._id }, data: req.body, options: { new: true }, select: privateData });
         const bytes = CryptoJS.AES.decrypt(updatedUser.phone, process.env.CRYPTPHONESECRET);
         updatedUser.phone = bytes.toString(CryptoJS.enc.Utf8);
@@ -47,7 +43,7 @@ export const addProfilePic = asyncHandler(
         //Delete old image but not default image
         const { profilePic } = await findById({ model: userModel, filter: { _id: req.user._id }, select: 'profilePic' });
         if (profilePic.secure_url !== secureURL) {
-             cloudinary.uploader.destroy(profilePic.public_id);
+            cloudinary.uploader.destroy(profilePic.public_id);
         }
 
         //upload new image
@@ -204,11 +200,16 @@ export const getProfile = asyncHandler(
         //anotherUser
         if (id) {
             user = await findById({
-                model: userModel, filter: { _id: id }, select: privateData,
+                model: userModel, filter: { _id: id }, select: privateData + '-wishList',
                 populate: [
                     {
                         path: 'following',
                         select: 'firstName lastName userName'
+                    }
+                    ,
+                    {
+                        path: 'wishList',
+                        select: '-isDeleted'
                     }
                 ]
             })
@@ -219,12 +220,23 @@ export const getProfile = asyncHandler(
                     {
                         path: 'following',
                         select: 'firstName lastName userName'
+                    },
+                    {
+                        path: 'wishList',
+                        select: '-isDeleted'
                     }
                 ]
             })
         }
         const bytes = CryptoJS.AES.decrypt(user.phone, process.env.CRYPTPHONESECRET);
         user.phone = bytes.toString(CryptoJS.enc.Utf8);
+
+        //get genre
+        user = user.toObject();
+        for (const game of user?.wishList) {
+            const genre = await findById({ model: genreModel, filter: { _id: game.genreId }, select: 'name' })
+            game.genre = genre;
+        }
         return res.status(200).json({ message: "done", user })
     }
 )
@@ -240,7 +252,7 @@ export const getUsers = asyncHandler(
     async (req, res, next) => {
         let { userNameQ } = req.query;
         userNameQ = userNameQ?.toLowerCase();
-        let users = await userModel.find({ userName: { $regex: `^${userNameQ}` }, isDeleted: false, isBlocked: false }).select(privateData).populate([
+        let users = await userModel.find({ userName: { $regex: `^${userNameQ}` }, isDeleted: false, isBlocked: false }).select(privateData + '-wishList').populate([
             {
                 path: 'following',
                 select: 'firstName lastName userName'
@@ -252,5 +264,42 @@ export const getUsers = asyncHandler(
             }
         });
         return res.status(200).json({ message: "done", users });
+    }
+)
+
+export const AddToWishList = asyncHandler(
+    async (req, res, next) => {
+        const { gameId } = req.params;
+        const exist = await findOne({ model: gameModel, filter: { _id: gameId, isDeleted: false }, select: 'name' });
+        if (!exist) {
+            return next(Error('game not exist', { cause: 404 }));
+        }
+        const update = await findByIdAndUpdate({
+            model: userModel, filter: { _id: req.user._id },
+            data: { $addToSet: { wishList: gameId } }, options: { new: true }, select: 'wishList'
+        });
+        return res.status(200).json({ message: "done", update })
+    }
+)
+
+export const removeFromWishList = asyncHandler(
+    async (req, res, next) => {
+        const { gameId } = req.params;
+        const exist = await findOne({ model: gameModel, filter: { _id: gameId, isDeleted: false }, select: 'name' });
+        if (!exist) {
+            return next(Error('game not exist', { cause: 404 }));
+        }
+        const update = await findByIdAndUpdate({
+            model: userModel, filter: { _id: req.user._id },
+            data: { $pull: { wishList: gameId } }, options: { new: true }, select: 'wishList'
+        });
+        return res.status(200).json({ message: "done", update })
+    }
+)
+
+export const getActivities = asyncHandler(
+    async (req, res, next) => {
+        const user = await findById({ model: userModel, filter: { _id: req.user._id }, select: 'activity' });
+        return res.status(200).json({ message: "done", user })
     }
 )
