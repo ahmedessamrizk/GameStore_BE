@@ -2,7 +2,6 @@ import authRouter from './auth/auth.router.js'
 import userRouter from './user/user.router.js'
 import gameRouter from './game/game.router.js'
 import genreRouter from './genre/genre.router.js'
-import commentRouter from './comment/comment.router.js'
 import cartRouter from './cart/cart.router.js'
 import morgan from 'morgan'
 import cors from 'cors'
@@ -38,7 +37,6 @@ export const appRouter = (app) => {
     app.use(`${baseURL}/user`, userRouter);
     app.use(`${baseURL}/game`, gameRouter);
     app.use(`${baseURL}/genre`, genreRouter);
-    app.use(`${baseURL}/comment`, commentRouter);
     app.use(`${baseURL}/cart`, cartRouter);
 
     //Invalid routing

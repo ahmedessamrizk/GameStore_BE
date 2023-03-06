@@ -2,7 +2,7 @@ import { roles } from "../../../DB/models/user.model.js";
 
 
 export const userRoles = {
-    updateProfile: [roles.admin, roles.superAdmin, roles.user],
+    update: [roles.admin, roles.superAdmin, roles.user],
     getProfile: [roles.admin, roles.superAdmin, roles.user],
     signout: [roles.admin, roles.superAdmin, roles.user],
     getUsers: [roles.admin, roles.superAdmin, roles.user],

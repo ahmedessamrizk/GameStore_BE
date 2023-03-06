@@ -7,8 +7,9 @@ import jwt from 'jsonwebtoken'
 import { sendEmail } from './../../../services/email.js';
 import { checkUser } from './../../../services/checkUser.js';
 import { nanoid } from 'nanoid';
-import { calcDate } from './../../user/controller/user.js';
+
 import cloudinary from '../../../services/cloudinary.js';
+import { calcDate } from '../../../services/calcDate.js';
 
 const defaultPublicId = "Users/xla2re0yabzzuzwt0jat";
 const secureURL = "https://res.cloudinary.com/dpiwjrxdt/image/upload/v1677599795/Users/xla2re0yabzzuzwt0jat.webp";
