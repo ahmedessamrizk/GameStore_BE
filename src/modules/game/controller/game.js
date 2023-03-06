@@ -5,9 +5,10 @@ import { create, findOne, updateOne, findOneAndUpdate } from './../../../../DB/D
 import gameModel from './../../../../DB/models/game.model.js';
 import cloudinary from './../../../services/cloudinary.js';
 import userModel from '../../../../DB/models/user.model.js';
+import pushNotify, { activityMessages } from '../../../services/pushNotify.js';
 
-const default_secure_url = 'https://res.cloudinary.com/dpiwjrxdt/image/upload/v1677598853/games/aGame_rnkyvh.jpg'
-const default_public_id = 'games/aGame_rnkyvh'
+const default_secure_url = 'https://res.cloudinary.com/dpiwjrxdt/image/upload/v1678110447/games/default_game_lcm7d0.jpg'
+const default_public_id = 'games/default_game_lcm7d0'
 
 export const addGame = asyncHandler(
     async (req, res, next) => {
@@ -15,10 +16,9 @@ export const addGame = asyncHandler(
         const exists = await findOne({ model: gameModel, filter: { slug: req.body.slug } })
         if (!exists) {
             req.body.createdBy = req.user._id
-
             const image = req.file //unnecessary
             if (image) {
-                var { secure_url, public_id } = await cloudinary.uploader.upload(image.path, { folder: `/games/${req.user.userName}-${req.user._id}` })
+                var { secure_url, public_id } = await cloudinary.uploader.upload(image.path, { folder: `/games/${req.body.slug}/mainPic` })
             } else {
                 //default icon
                 secure_url = default_secure_url
@@ -26,7 +26,12 @@ export const addGame = asyncHandler(
             }
             req.body.mainPic = { secure_url, public_id }
             const newGame = await create({ model: gameModel, data: req.body })
-            return newGame ? res.status(201).json({ message: "done" }) : next(Error("Something went wrong", { cause: 400 }))
+            if (newGame) {
+                pushNotify({ to: req.user._id, message: activityMessages.addGame, gameId: newGame._id, type: "A" })
+                return res.status(201).json({ message: "done" });
+            } else {
+                return next(Error("Something went wrong", { cause: 400 }));
+            }
         } else {
             return next(Error("Game already exists", { cause: 409 }))
         }
@@ -36,15 +41,16 @@ export const addGame = asyncHandler(
 export const addGameVid = asyncHandler(
     async (req, res, next) => {
         const { gameId } = req.params
-        const vidExist = await findOne({ model: gameModel, filter: { _id: gameId }, select: "video" })
+        const vidExist = await findOne({ model: gameModel, filter: { _id: gameId }, select: "video slug" })
         const video = req.file
         if (video) {
-            if (vidExist?.video) {
-                await cloudinary.uploader.destroy(vidExist.video.public_id, { resource_type: "video" })
+            if (vidExist?.video?.public_id) {
+                await cloudinary.uploader.destroy(vidExist?.video?.public_id, { resource_type: "video" });
             }
-            const cloudinaryResult = await cloudinary.uploader.upload(video.path, { folder: `games/${req.user.userName}-${req.user._id}/video`, resource_type: "video" })
+            const cloudinaryResult = await cloudinary.uploader.upload(video.path, { folder: `games/${vidExist?.slug}/video`, resource_type: "video" });
             req.body.video = { secure_url: cloudinaryResult.secure_url, public_id: cloudinaryResult.public_id }
             const game = await findOneAndUpdate({ model: gameModel, filter: { _id: gameId, createdBy: req.user._id }, data: req.body, options: { new: true }, select: "video" });
+            pushNotify({ to: req.user._id, message: activityMessages.addGameVid, gameId, type: "A" })
             return game ? res.status(200).json({ message: "done", game }) : next(Error("You don't have the permission ", { cause: 400 }))
         } else {
             return next(Error("please upload the video", { cause: 400 }))
@@ -55,15 +61,20 @@ export const addGameVid = asyncHandler(
 export const addGamePics = asyncHandler(
     async (req, res, next) => {
         const { gameId } = req.params
+        const exists = await findOne({ model: gameModel, filter: { _id: gameId, createdBy: req.user._id } })
+        if (!exists) {
+            return next(Error('Invalid gameId', { cause: 404 }));
+        }
         if (!req.files) {
             return next(Error('please upload the image/s', { cause: 400 }));
         }
         const imageURLs = [];
         for (const file of req.files) {
-            const { secure_url, public_id } = await cloudinary.uploader.upload(file.path, { folder: `games/${req.user.userName}-${req.user._id}/pics` });
+            const { secure_url, public_id } = await cloudinary.uploader.upload(file.path, { folder: `games/${exists.slug}/pics` });
             imageURLs.push({ secure_url, public_id });
         }
         const game = await findOneAndUpdate({ model: gameModel, filter: { _id: gameId, createdBy: req.user._id }, data: { $push: { pics: imageURLs } }, options: { new: true }, select: "pics" });
+        pushNotify({ to: req.user._id, message: activityMessages.addGamePics, gameId, type: "A" })
         return game ? res.status(200).json({ message: "done", game }) : next(Error("It's not your game", { cause: 400 }))
     }
 )
@@ -80,6 +91,7 @@ export const removeGame = asyncHandler(
                 // for (const pic of exists.pics) {
                 //     cloudinary.uploader.destroy(pic.public_id)
                 // }
+                pushNotify({ to: req.user._id, message: activityMessages.removeGame, gameId, type: "A" })
                 return res.status(200).json({ message: "done" })
             } else {
                 return next(Error("Something went wrong", { cause: 400 }))
@@ -102,7 +114,7 @@ export const updateGame = asyncHandler(
             }
             const image = req.file //unnecessary
             if (image) {
-                var { secure_url, public_id } = await cloudinary.uploader.upload(image.path, { folder: `/games/${req.user.userName}-${req.user._id}` })
+                var { secure_url, public_id } = await cloudinary.uploader.upload(image.path, { folder: `/games/${game.slug}/mainPic` })
                 // remove old pic if not the default
                 if (game.mainPic.public_id !== default_public_id) {
                     await cloudinary.uploader.destroy(game.mainPic.public_id)
@@ -113,7 +125,12 @@ export const updateGame = asyncHandler(
             if (ownerId === loggedUserId) {//updated by owner
                 req.body.updatedBy = game.createdBy._id;
                 const updatedGame = await updateOne({ model: gameModel, filter: { _id: gameId }, data: req.body })
-                return updatedGame.modifiedCount ? res.status(200).json({ message: "done" }) : next(Error("Something went wrong", { cause: 400 }))
+                if (updatedGame.modifiedCount) {
+                    pushNotify({ to: req.user._id, message: activityMessages.updateGame, gameId, type: "A" })
+                    return res.status(200).json({ message: "done" });
+                } else {
+                    return next(Error("Something went wrong", { cause: 400 }))
+                }
             } else {
                 return next(Error("You don't have the permission", { cause: 403 }))
             }
@@ -124,35 +141,3 @@ export const updateGame = asyncHandler(
     }
 )
 
-// export const addRate = asyncHandler(
-//     async (req, res, next) => {
-//         const { gameId } = req.params
-//         const { rate } = req.body
-//         let indicator = false;
-//         const theRate = { userId: req.user._id, rate }
-//         const { ratings } = await findOne({ model: gameModel, filter: { _id: gameId }, select: "ratings" })
-//         for (const rate of ratings) {
-                //req.user._id == rate.userId ==> rate.val = rate
-                //calcRate(rate) ==> 
-//             if (JSON.stringify(theRate.userId) === JSON.stringify(rate.userId)) {
-//                 indicator = true
-//             }
-//         }
-
-//         if (indicator) {
-//             const update = await findOneAndUpdate({ model: gameModel, filter: { _id: gameId }, data: { ratings: { $addToSet: { userId: req.user._id }, rate } }, options: { new: true }, select: "ratings" });
-//             return update ? res.status(200).json({ message: "done", update }) : next(Error("Invalid Game ID", { cause: 400 }))
-//         } else {
-//             const update = await findOneAndUpdate({ model: gameModel, filter: { _id: gameId }, data: { $addToSet: { ratings: theRate } }, options: { new: true }, select: "ratings" });
-//             return update ? res.status(200).json({ message: "done", update }) : next(Error("Invalid Game ID", { cause: 400 }))
-//         }
-//     }
-// )
-
-// export const removeRate = asyncHandler(
-//     async (req, res, next) => {
-//         const { gameId } = req.params
-//         const update = await findOneAndUpdate({ model: gameModel, filter: { _id: gameId, isDeleted: false }, data: { $pull: { ratings: { userId: req.user._id } }, options: { new: true } }, select: "ratings" });
-//         return update ? res.status(200).json({ message: "done", update }) : next(Error("Invalid Game ID", { cause: 400 }))
-//     }
-// )

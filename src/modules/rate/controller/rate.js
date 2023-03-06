@@ -3,7 +3,7 @@ import rateModel from './../../../../DB/models/rate.model.js';
 import { create, findOne, findOneAndUpdate, updateOne } from './../../../../DB/DBmethods.js';
 import gameModel from './../../../../DB/models/game.model.js';
 import calcAvgRate from './../../../services/calcAvgRate.js';
-import pushNotify, { notifyMessages } from "../../../services/pushNotify.js";
+import pushNotify, { notifyMessages, activityMessages } from "../../../services/pushNotify.js";
 
 
 export const addRate = asyncHandler(
@@ -22,22 +22,24 @@ export const addRate = asyncHandler(
             const newRate = await create({ model: rateModel, data })
             if (newRate) {
                 pushNotify({ to: gameExist.createdBy, from: req.user._id, message: notifyMessages.addRate, gameId })
+                pushNotify({ to: req.user._id, message: activityMessages.addRate, gameId, type: "A" })
                 const avgRate = await calcAvgRate(gameId)
                 const updateGameRate = await updateOne({ model: gameModel, filter: { gameId }, data: { avgRate } })
-                updateGameRate.modifiedCount ? res.status(201).json({ message: "done", newRate, avgRate }) : next(Error("Something went wrong", { cause: 400 }))
+                return updateGameRate.modifiedCount ? res.status(201).json({ message: "done", newRate, avgRate }) : next(Error("Something went wrong", { cause: 400 }))
             } else {
-                next(Error("Something went wrong", { cause: 400 }))
+                return next(Error("Something went wrong", { cause: 400 }))
             }
         } else {
             //update old rate
             const updateRate = await findOneAndUpdate({ model: rateModel, filter: { userId: req.user._id, gameId }, data: { value: rate }, options: { new: true } })
             if (updateRate) {
-                const avgRate = await calcAvgRate(gameId)
                 pushNotify({ to: gameExist.createdBy, from: req.user._id, message: notifyMessages.addRate, gameId }) // without await
+                pushNotify({ to: req.user._id, message: activityMessages.addRate, gameId, type: "A" })
+                const avgRate = await calcAvgRate(gameId)
                 const updateGameRate = await updateOne({ model: gameModel, filter: { gameId }, data: { avgRate } })
-                updateGameRate.modifiedCount ? res.status(200).json({ message: "done", updateRate, avgRate }) : next(Error("Something went wrong", { cause: 400 }))
+                return updateGameRate.modifiedCount ? res.status(200).json({ message: "done", updateRate, avgRate }) : next(Error("Something went wrong", { cause: 400 }))
             } else {
-                next(Error("Something went wrong", { cause: 400 }))
+                return next(Error("Something went wrong", { cause: 400 }))
             }
         }
     }
