@@ -58,7 +58,7 @@ export const getCart = asyncHandler(
 
         for (const gameId of cart.games) {
             let game = await findById({ model: gameModel, filter: { _id: gameId }, select: 'name desc mainPic isDeleted price' })
-            if (game.isDeleted) {
+            if (game?.isDeleted) {
                 cart.games.splice(index, 1);
                 change = true;
             }
