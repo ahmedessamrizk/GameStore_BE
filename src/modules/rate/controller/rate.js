@@ -22,7 +22,7 @@ export const addRate = asyncHandler(
             const data = { value: rate, userId: req.user._id, gameId }
             const newRate = await create({ model: rateModel, data })
             if (newRate) {
-                const avgRate = calcAvgRate(gameId)
+                const avgRate = await calcAvgRate(gameId)
                 const updateGameRate = await updateOne({ model: gameModel, filter: { gameId }, data: { avgRate } })
                 updateGameRate.modifiedCount ? res.status(201).json({ message: "done", newRate, avgRate }) : next(Error("Something went wrong", { cause: 400 }))
             } else {
