@@ -2,6 +2,7 @@ import authRouter from './auth/auth.router.js'
 import userRouter from './user/user.router.js'
 import gameRouter from './game/game.router.js'
 import rateRouter from './rate/rate.router.js'
+import commentRouter from './comment/comment.router.js'
 import genreRouter from './genre/genre.router.js'
 import cartRouter from './cart/cart.router.js'
 import morgan from 'morgan'
@@ -40,6 +41,7 @@ export const appRouter = (app) => {
     app.use(`${baseURL}/genre`, genreRouter);
     app.use(`${baseURL}/cart`, cartRouter);
     app.use(`${baseURL}/rate`, rateRouter);
+    app.use(`${baseURL}/comment`, commentRouter);
 
     //Invalid routing
     app.use('*', (req, res, next) => {

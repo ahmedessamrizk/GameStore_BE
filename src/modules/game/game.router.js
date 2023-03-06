@@ -3,10 +3,15 @@ import auth from '../../middleware/auth.js';
 import { gameRoles } from './game.roles.js';
 import { myMulter, fileFormat } from './../../services/multer.js';
 import * as gameController from './controller/game.js'
-import * as commentController from './controller/comment.js'
 import rateRouter from './../rate/rate.router.js'
+import commentRouter from './../comment/comment.router.js'
+ 
 
 const router = Router();
+
+//router to comment API
+router.use("/:gameId/comment",commentRouter )
+
 
 //router to rate API
 router.use("/:gameId/rate",rateRouter )
@@ -37,22 +42,5 @@ router.put('/:gameId/update',
     auth(gameRoles.A_SA),
     gameController.updateGame)
 
-
-
-//Comment API 
-//addComment
-router.post('/:gameId/comment', auth(gameRoles.All), commentController.addComment)
-
-//removeComment
-router.delete('/:gameId/comment/:commentId', auth(gameRoles.All), commentController.removeComment)
-
-//updateComment
-router.put('/:gameId/comment/:commentId', auth(gameRoles.All), commentController.updateComment)
-
-//getComments
-router.get('/:gameId/comment', commentController.getComments)
-
-//ratings
-// router.patch('/:gameId/rate', auth(allRoles), gameController.addRate)
 
 export default router
