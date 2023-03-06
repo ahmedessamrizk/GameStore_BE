@@ -8,7 +8,7 @@ import calcAvgRate from './../../../services/calcAvgRate.js';
 export const addRate = asyncHandler(
     async (req, res, next) => {
 
-        const { rate } = req.body
+        let { rate } = req.body
         const { gameId } = req.params
         rate = rate ? rate : 0;
 
