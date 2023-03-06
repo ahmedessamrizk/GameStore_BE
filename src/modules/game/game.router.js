@@ -4,8 +4,12 @@ import { gameRoles } from './game.roles.js';
 import { myMulter, fileFormat } from './../../services/multer.js';
 import * as gameController from './controller/game.js'
 import * as commentController from './controller/comment.js'
+import rateRouter from './../rate/rate.router.js'
 
 const router = Router();
+
+//router to rate API
+router.use("/:gameId/rate",rateRouter )
 
 // Add Game Data
 router.post('/add',
@@ -33,6 +37,9 @@ router.put('/:gameId/update',
     auth(gameRoles.A_SA),
     gameController.updateGame)
 
+
+
+//Comment API 
 //addComment
 router.post('/:gameId/comment', auth(gameRoles.All), commentController.addComment)
 

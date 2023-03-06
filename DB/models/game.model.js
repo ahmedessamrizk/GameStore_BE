@@ -58,20 +58,11 @@ const gameSchema = new Schema({
         type: Boolean,
         default: false
     },
-    ratings:[{
-        userId: {
-            type: Types.ObjectId,
-            ref: 'User',
-            required: [true, 'userId is required']
-        },
-        rate: {
-            type: Number,
-            required: [true, 'rate is required'],
-            min:[0,"rate can't be negative"],
-            max:[5,"rate can't be negative"],
-        },
-        _id: false
-    }]
+    avgRate:{
+        type:Number,
+        min:[0,"avgRate can't be negative"],
+        max:[5,"avgRate can't be more than 5"],
+    }
 }, {
     timestamps: true
 })
