@@ -5,8 +5,8 @@ import genreModel from './../../../../DB/models/genre.model.js';
 import { roles } from '../../../../DB/models/user.model.js';
 import cloudinary from './../../../services/cloudinary.js';
 
-const default_secure_url = "https://res.cloudinary.com/dpiwjrxdt/image/upload/v1677506316/genre/Agenre_py9lkw.png"
-const default_public_id = "genre/Agenre_py9lkw"
+const default_secure_url = "https://res.cloudinary.com/dpiwjrxdt/image/upload/v1678111117/genre/default_genre_bxfmjm.jpg"
+const default_public_id = "genre/default_genre_bxfmjm"
 
 export const addGenre = asyncHandler(
     async (req, res, next) => {
@@ -15,14 +15,23 @@ export const addGenre = asyncHandler(
         if (!exists) {
             req.body.slug = slug
             req.body.createdBy = req.user._id
+            const image = req.file //unnecessary
+            if (image) {
+                var { secure_url, public_id } = await cloudinary.uploader.upload(image.path, { folder: `/genre/${req.body.slug}` })
+            } else {
+                //default icon
+                secure_url = default_secure_url
+                public_id = default_public_id
+            }
+            req.body.image = { secure_url, public_id }
             await create({ model: genreModel, data: req.body })
-            return res.status(201).json({ message: "done" })
+            return res.status(200).json({ message: "done" })
         } else {
             return next(Error("Genre already exists", { cause: 409 }))
         }
     }
 )
-export const addImage = asyncHandler(
+/*export const addImage = asyncHandler(
     async (req, res, next) => {
         const { genreId } = req.params;
         const genre = await findById({
@@ -57,7 +66,7 @@ export const addImage = asyncHandler(
         }
 
     }
-)
+)*/
 
 export const updateGenre = asyncHandler(
     async (req, res, next) => {
@@ -77,7 +86,7 @@ export const updateGenre = asyncHandler(
 
             const image = req.file //unnecessary
             if (image) {
-                var { secure_url, public_id } = await cloudinary.uploader.upload(image.path, { folder: `/genre/${req.user.userName}-${req.user._id}` })
+                var { secure_url, public_id } = await cloudinary.uploader.upload(image.path, { folder: `/genre/${genre.slug}` })
                 // remove old pic if not the default
                 if (genre.image.public_id !== default_public_id) {
                     await cloudinary.uploader.destroy(genre.image.public_id)

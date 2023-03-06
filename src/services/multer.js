@@ -1,8 +1,8 @@
 import multer from 'multer'
 
 export const fileFormat = {
-    image: ['image/png', 'image/jpeg', 'image/jif'],
-    video: ['video/mov','video/mkv','video/webm','video/mp4','video/gif','image/gif'],
+    image: ['image/png', 'image/jpeg', 'image/jif', 'image/jfif', 'image/gif'],
+    video: ['video/mov', 'video/mkv', 'video/webm', 'video/mp4', 'video/gif'],
     pdf: ['application/pdf']
 }
 

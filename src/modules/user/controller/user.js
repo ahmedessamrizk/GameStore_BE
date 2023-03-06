@@ -206,11 +206,7 @@ export const getProfile = asyncHandler(
                         path: 'following',
                         select: 'firstName lastName userName'
                     }
-                    ,
-                    {
-                        path: 'wishList',
-                        select: '-isDeleted'
-                    }
+
                 ]
             })
         } else {    //ownProfile
@@ -220,23 +216,12 @@ export const getProfile = asyncHandler(
                     {
                         path: 'following',
                         select: 'firstName lastName userName'
-                    },
-                    {
-                        path: 'wishList',
-                        select: '-isDeleted'
                     }
                 ]
             })
         }
         const bytes = CryptoJS.AES.decrypt(user.phone, process.env.CRYPTPHONESECRET);
         user.phone = bytes.toString(CryptoJS.enc.Utf8);
-
-        //get genre
-        user = user.toObject();
-        for (const game of user?.wishList) {
-            const genre = await findById({ model: genreModel, filter: { _id: game.genreId }, select: 'name' })
-            game.genre = genre;
-        }
         return res.status(200).json({ message: "done", user })
     }
 )
@@ -294,6 +279,28 @@ export const removeFromWishList = asyncHandler(
             data: { $pull: { wishList: gameId } }, options: { new: true }, select: 'wishList'
         });
         return res.status(200).json({ message: "done", update })
+    }
+)
+
+export const getWishList = asyncHandler(
+    async (req, res, next) => {
+        let { wishList } = await findById({
+            model: userModel, filter: { _id: req.user._id }, select: 'wishList', populate: [
+                {
+                    path: 'wishList',
+                    select: 'mainPic name desc price'
+                }
+            ]
+        });
+        /*const newWishList = [];
+        wishList = wishList.toObject();
+        for (const gameId of wishList) {
+            const game = await findById({model: gameModel, filter:{_id: gameId, isDeleted: false}, select: 'mainPic name desc price'});
+            if (game) {
+                newWishList.push(game);
+            } 
+        }*/
+        return res.status(200).json({ message: "done", wishList })
     }
 )
 
