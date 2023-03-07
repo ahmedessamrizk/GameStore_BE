@@ -242,15 +242,3 @@ export const getGames = asyncHandler(
         res.status(200).json({ message: "done", games })
     }
 )
-
-
-//change all Slugs to lowe case
-// export const editSlugs = async (req, res, next) => {
-//     const allGenres = await find({ model: genreModel, filter: {}, select: '_id slug' })
-//     for (const genre of allGenres) {
-//         const newSlug = (genre.slug).toLowerCase()
-//         console.log(genre.slug)
-//         await updateOne({ model: genreModel, filter: { slug: genre.slug }, data: { slug: newSlug } })
-//     }
-//     res.json({ message: "done", allGenres })
-// }
