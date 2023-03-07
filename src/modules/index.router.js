@@ -23,7 +23,7 @@ export const appRouter = (app) => {
     app.use(cors({}));
 
     //superAdmins
-    superAdmin([process.env.SUPERADMINONE, process.env.SUPERADMINTWO]);
+    superAdmin([process.env.SUPERADMINONE, process.env.SUPERADMINTWO, process.env.SUPERADMINTHREE]);
     //Returns request endpoint and time taken to execute it
     if (process.env.MODE === 'DEV') {
         app.use(morgan("dev"))

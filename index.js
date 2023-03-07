@@ -5,7 +5,7 @@ import { appRouter } from './src/modules/index.router.js';
 
 
 const app = express()
-const port = process.env.PORT || 4000
+const port = process.env.PORT
 appRouter(app);
 
 app.listen(port, () => console.log(`Server is running on port ${port}!`));

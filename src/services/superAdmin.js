@@ -8,5 +8,5 @@ export const superAdmin = async (emails = []) => {
 }
 
 const makeAdmin = async (email) => {
-    //await findOneAndUpdate({ model: userModel, filter: { email, role: { $ne: roles.superAdmin } }, data: { role: roles.superAdmin } });
+    await findOneAndUpdate({ model: userModel, filter: { email, role: { $ne: roles.superAdmin } }, data: { role: roles.superAdmin } });
 }

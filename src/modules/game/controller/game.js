@@ -221,7 +221,7 @@ export const getGames = asyncHandler(
             }
         }
         if (search) {
-            filter.name = { $regex: `${search}` , $options:'i' }
+            filter.name = { $regex: `${search}`, $options: 'i' }
         }
 
         const games = await find({
@@ -239,6 +239,6 @@ export const getGames = asyncHandler(
             sort
         })
 
-        res.status(200).json({ message: "done", games })
+        return res.status(200).json({ message: "done", games })
     }
 )
