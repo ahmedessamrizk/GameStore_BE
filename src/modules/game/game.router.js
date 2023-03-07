@@ -42,5 +42,12 @@ router.put('/:gameId/update',
     auth(gameRoles.A_SA),
     gameController.updateGame)
 
+//Get Game/s
+router.get("/all",gameController.getGames)
+router.get("/:gameId",gameController.getGame)
+
+
+//change slugs to lower case 
+// router.get("/test",gameController.editSlugs)
 
 export default router
