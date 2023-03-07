@@ -1,18 +1,22 @@
 
 import { asyncHandler } from './../../../middleware/asyncHandler.js';
 import slugify from 'slugify'
-import { create, findOne, updateOne, findOneAndUpdate } from './../../../../DB/DBmethods.js';
+import { create, findOne, updateOne, findOneAndUpdate, find } from './../../../../DB/DBmethods.js';
 import gameModel from './../../../../DB/models/game.model.js';
 import cloudinary from './../../../services/cloudinary.js';
 import userModel from '../../../../DB/models/user.model.js';
 import pushNotify, { activityMessages } from '../../../services/pushNotify.js';
+import { privateData } from './../../user/controller/user.js';
+import CryptoJS from 'crypto-js';
+import { paginate } from '../../../services/pagination.js';
+import genreModel from '../../../../DB/models/genre.model.js';
 
 const default_secure_url = 'https://res.cloudinary.com/dpiwjrxdt/image/upload/v1678110447/games/default_game_lcm7d0.jpg'
 const default_public_id = 'games/default_game_lcm7d0'
 
 export const addGame = asyncHandler(
     async (req, res, next) => {
-        req.body.slug = slugify(req.body.name)
+        req.body.slug = slugify(req.body.name).toLowerCase()
         const exists = await findOne({ model: gameModel, filter: { slug: req.body.slug } })
         if (!exists) {
             req.body.createdBy = req.user._id
@@ -110,7 +114,7 @@ export const updateGame = asyncHandler(
             const ownerId = JSON.stringify(game.createdBy._id)
             const loggedUserId = JSON.stringify(req.user._id)
             if (req.body.name) {
-                req.body.slug = slugify(req.body.name)
+                req.body.slug = slugify(req.body.name).toLowerCase()
             }
             const image = req.file //unnecessary
             if (image) {
@@ -141,3 +145,100 @@ export const updateGame = asyncHandler(
     }
 )
 
+export const getGame = asyncHandler(
+    async (req, res, next) => {
+        const { gameId } = req.params
+        const game = await findOne({
+            model: gameModel, filter: { _id: gameId, isDeleted: false }, select: "-isDeleted",
+            populate: [
+                {
+                    path: "createdBy",
+                    select: privateData + " -DOB -wishList -following -coverPics -createdAt -updatedAt -notifications"
+
+                },
+                {
+                    path: "updatedBy",
+                    select: privateData + " -DOB -wishList -following -coverPics -createdAt -updatedAt -notifications"
+                },
+                {
+                    path: "genreId",
+                },
+            ]
+        })
+        if (game) {
+            game.toObject()
+            const de_phone = CryptoJS.AES.decrypt(game.createdBy.phone, process.env.CRYPTPHONESECRET).toString(CryptoJS.enc.Utf8);
+            if (game.updatedBy?.phone) {
+                const de_phone_2 = CryptoJS.AES.decrypt(game.updatedBy.phone, process.env.CRYPTPHONESECRET).toString(CryptoJS.enc.Utf8);
+                game.updatedBy.phone = de_phone_2
+            }
+            game.createdBy.phone = de_phone
+            return res.status(200).json({ message: "done", game })
+        } else {
+            return next(Error("Invalid game ID", { cause: 404 }))
+        }
+    }
+)
+
+export const getGames = asyncHandler(
+    async (req, res, next) => {
+        //pagination 
+        const { page, size } = req.query
+        const { skip, limit } = paginate(page, size)
+
+        //sort
+        let { avgRate, price, alpha, released, lastAdded } = req.query
+        const sort = {}
+        if (avgRate) {
+            sort.avgRate = avgRate
+        }
+        if (price) {
+            sort.price = price
+        }
+        if (alpha) {
+            sort.alpha = alpha
+        }
+        if (released) {
+            sort.released = released
+        }
+        if (lastAdded) {
+            sort.createdAt = lastAdded
+        } else {
+            sort.createdAt = -1
+        }
+
+
+        //filter by
+        let { genre, search } = req.query
+        const filter = { isDeleted: false }
+        if (genre) {
+            genre = genre.toLowerCase()
+            const searchByGenre = await findOne({ model: genreModel, filter: { slug: genre, isDeleted: false }, select: "_id" })
+            if (searchByGenre?._id) {
+                filter.genreId = searchByGenre._id
+            } else {
+                next(Error("Genre Not found", { cause: 404 }))
+            }
+        }
+        if (search) {
+            filter.name = { $regex: `${search}` , $options:'i' }
+        }
+
+        const games = await find({
+            model: gameModel, filter, select: "-isDeleted -video -pics -updatedBy", skip, limit,
+            populate: [
+                {
+                    path: "createdBy",
+                    select: privateData + " -phone -email -DOB -wishList -following -coverPics -createdAt -updatedAt -notifications"
+
+                },
+                {
+                    path: "genreId",
+                },
+            ],
+            sort
+        })
+
+        res.status(200).json({ message: "done", games })
+    }
+)

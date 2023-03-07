@@ -1,7 +1,7 @@
 
 //find methods
-export const find = async ({ model, filter = {}, populate = [], select = "", skip = 0, limit = 10 } = {}) => {
-    const result = await model.find(filter).limit(limit).skip(skip).select(select).populate(populate)
+export const find = async ({ model, filter = {}, populate = [], select = "", skip = 0, limit = 10, sort = {} } = {}) => {
+    const result = await model.find(filter).limit(limit).skip(skip).select(select).populate(populate).sort(sort)
     return result
 }
 

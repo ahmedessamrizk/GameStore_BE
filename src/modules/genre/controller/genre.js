@@ -10,7 +10,7 @@ const default_public_id = "genre/default_genre_bxfmjm"
 
 export const addGenre = asyncHandler(
     async (req, res, next) => {
-        const slug = slugify(req.body.name);
+        const slug = slugify(req.body.name).toLowerCase();
         const exists = await findOne({ model: genreModel, filter: { slug } })
         if (!exists) {
             req.body.slug = slug
@@ -81,7 +81,7 @@ export const updateGenre = asyncHandler(
             const ownerId = JSON.stringify(genre.createdBy._id)
             const loggedUserId = JSON.stringify(req.user._id)
             if (req.body.name) {
-                req.body.slug = slugify(req.body.name);
+                req.body.slug = slugify(req.body.name).toLowerCase();
             }
 
             const image = req.file //unnecessary

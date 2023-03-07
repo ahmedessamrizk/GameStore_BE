@@ -10,7 +10,7 @@ import { calcDate } from '../../../services/calcDate.js';
 import gameModel from './../../../../DB/models/game.model.js';
 import genreModel from './../../../../DB/models/genre.model.js';
 
-const privateData = '-isDeleted -confirmEmail -isBlocked -password -code -accountType -activity -notifications';
+export const privateData = '-isDeleted -confirmEmail -isBlocked -password -code -accountType -activity -notifications';
 const secureURL = "https://res.cloudinary.com/dpiwjrxdt/image/upload/v1677599795/Users/xla2re0yabzzuzwt0jat.webp";
 
 //update: firstName lastName DOB phone gender photos
