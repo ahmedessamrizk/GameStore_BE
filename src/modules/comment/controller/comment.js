@@ -78,7 +78,7 @@ export const getComments = asyncHandler(
             model: commentModel, filter: { gameId }, populate: [
                 {
                     path: 'createdBy',
-                    select: 'firstName lastName',
+                    select: 'firstName lastName profilePic',
                 }
             ]
         });
