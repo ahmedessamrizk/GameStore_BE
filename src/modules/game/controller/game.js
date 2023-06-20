@@ -148,6 +148,11 @@ export const updateGame = asyncHandler(
 export const getGame = asyncHandler(
     async (req, res, next) => {
         const { gameId } = req.params
+        const { userid } = req.headers
+        let userRate;
+        if (userid) {
+            userRate = await findOne({ model: rateModel, filter: { userId: userid, gameId } });
+        }
         const game = await findOne({
             model: gameModel, filter: { _id: gameId, isDeleted: false }, select: "-isDeleted",
             populate: [
@@ -173,7 +178,15 @@ export const getGame = asyncHandler(
                 game.updatedBy.phone = de_phone_2
             }
             game.createdBy.phone = de_phone
+            let result;
+            if (userid) {
+                result = JSON.stringify(game);
+                result = JSON.parse(result);
+                userRate ? result.userRate = userRate.value : result.userRate = 0
+                return res.status(200).json({ message: "done", game: result })
+            }
             return res.status(200).json({ message: "done", game })
+
         } else {
             return next(Error("Invalid game ID", { cause: 404 }))
         }
