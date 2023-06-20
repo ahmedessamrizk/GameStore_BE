@@ -10,6 +10,8 @@ import { privateData } from './../../user/controller/user.js';
 import CryptoJS from 'crypto-js';
 import { paginate } from '../../../services/pagination.js';
 import genreModel from '../../../../DB/models/genre.model.js';
+import rateModel from './../../../../DB/models/rate.model.js';
+
 
 const default_secure_url = 'https://res.cloudinary.com/dpiwjrxdt/image/upload/v1678110447/games/default_game_lcm7d0.jpg'
 const default_public_id = 'games/default_game_lcm7d0'
