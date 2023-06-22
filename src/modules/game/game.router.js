@@ -45,6 +45,7 @@ router.put('/:gameId/update',
 //Get Game/s
 router.get("/all",gameController.getGames)
 router.get("/:gameId",gameController.getGame)
+router.get("/user/:userId",gameController.getUserGames)
 
 
 

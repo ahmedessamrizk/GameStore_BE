@@ -232,7 +232,7 @@ export const getGames = asyncHandler(
             if (searchByGenre?._id) {
                 filter.genreId = searchByGenre._id
             } else {
-                next(Error("Genre Not found", { cause: 404 }))
+                return next(Error("Genre Not found", { cause: 404 }))
             }
         }
         if (search) {
@@ -255,5 +255,21 @@ export const getGames = asyncHandler(
         })
 
         return res.status(200).json({ message: "done", games })
+    }
+)
+
+export const getUserGames = asyncHandler(
+    async (req, res, next) => {
+        const { userId } = req.headers
+        if (userId) {
+            const games = await find({
+                model: gameModel, filter: { userId }, populate: [{ path: "genreId", },],
+            })
+            
+            return res.status(200).json({ message: "done", games })
+        }else{
+            return next(Error("In-valid user ID", { cause: 404 }))
+        }
+
     }
 )
