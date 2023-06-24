@@ -260,10 +260,10 @@ export const getGames = asyncHandler(
 
 export const getUserGames = asyncHandler(
     async (req, res, next) => {
-        const { userId } = req.headers
+        const { userId } = req.params
         if (userId) {
             const games = await find({
-                model: gameModel, filter: { userId }, populate: [{ path: "genreId", },],
+                model: gameModel, filter: { createdBy:userId }, populate: [{ path: "genreId", },],
             })
             
             return res.status(200).json({ message: "done", games })

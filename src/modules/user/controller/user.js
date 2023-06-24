@@ -1,6 +1,6 @@
 import userModel from "../../../../DB/models/user.model.js";
 import { asyncHandler } from "../../../middleware/asyncHandler.js";
-import { findByIdAndUpdate, findById, updateOne, find, findOne } from './../../../../DB/DBmethods.js';
+import { findByIdAndUpdate, findById, updateOne, find, findOne, findOneAndUpdate } from './../../../../DB/DBmethods.js';
 import CryptoJS from "crypto-js";
 import cloudinary from './../../../services/cloudinary.js';
 import { roles } from "../../../../DB/models/user.model.js";
@@ -9,6 +9,7 @@ import { checkUser } from "../../../services/checkUser.js";
 import { calcDate } from '../../../services/calcDate.js';
 import gameModel from './../../../../DB/models/game.model.js';
 import genreModel from './../../../../DB/models/genre.model.js';
+import { paginate } from "../../../services/pagination.js";
 
 export const privateData = '-isDeleted -confirmEmail -isBlocked -password -code -accountType -activity -notifications';
 const secureURL = "https://res.cloudinary.com/dpiwjrxdt/image/upload/v1677599795/Users/xla2re0yabzzuzwt0jat.webp";
@@ -215,7 +216,7 @@ export const getProfile = asyncHandler(
                 populate: [
                     {
                         path: 'following',
-                        select: 'firstName lastName userName'
+                        select: 'firstName lastName userName profilePic'
                     }
                 ]
             })
@@ -228,7 +229,8 @@ export const getProfile = asyncHandler(
 
 export const signOut = asyncHandler(
     async (req, res, next) => {
-        await updateOne({ model: userModel, filter: { _id: req.user._id }, data: { lastSeen: Date.now(), isOnline: false } });
+        let date = new Date()
+        const result = await findOneAndUpdate({ model: userModel, filter: { _id: req.user._id }, data: { lastSeen: date, isOnline: false },options:{new:true} });
         return res.status(200).json({ message: "done" });
     }
 )
@@ -306,7 +308,17 @@ export const getWishList = asyncHandler(
 
 export const getActivities = asyncHandler(
     async (req, res, next) => {
-        const user = await findById({ model: userModel, filter: { _id: req.user._id }, select: 'activity' });
+        const { page, size } = req.query
+        const { skip, limit } = paginate(page, size)
+        const user = await findById({ model: userModel, filter: { _id: req.user._id }, select: 'activity' , skip, limit});
         return res.status(200).json({ message: "done", user })
     }
 )
+
+export const getNotifications = asyncHandler(
+    async (req, res, next) => {
+        const user = await findById({ model: userModel, filter: { _id: req.user._id }, select: 'notifications'});
+        return res.status(200).json({ message: "done", user })
+    }
+)
+

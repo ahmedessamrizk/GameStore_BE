@@ -92,14 +92,16 @@ const userSchema = new Schema({
         gameId: {
             type: Types.ObjectId,
             ref: 'Game'
-        }
+        },
+        gameSlug: String
     }],
     notifications: [{
         message: String,
         gameId: {
             type: Types.ObjectId,
             ref: 'Game'
-        }
+        }, 
+        gameSlug: String
     }],
     code: {
         type: String,

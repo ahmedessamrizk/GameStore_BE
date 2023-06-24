@@ -1,6 +1,7 @@
 import { updateOne, findById } from "../../DB/DBmethods.js"
 import userModel from './../../DB/models/user.model.js'
 import gameModel from './../../DB/models/game.model.js';
+import slugify from "slugify";
 
 export const notifyMessages = { //addComment -  rate 
     addRate: "has rated your game:",
@@ -26,8 +27,9 @@ const pushNotify = async ({ to, from, message = "", gameId, type = "N" }) => {
         const { firstName, lastName } = await findById({ model: userModel, filter: from, select: "firstName lastName" })
         const { notifications } = await findById({ model: userModel, filter: to, select: "notifications" })
         const { name } = await findById({ model: gameModel, filter: gameId, select: "name" })
+        const gameSlug = slugify(name).toLowerCase()
         const text = `${firstName} ${lastName} ${message} ${name} `
-        const notify = { message: text, gameId }
+        const notify = { message: text, gameId, gameSlug }
         if (notifications.length >= 30) {
             await updateOne({ model: userModel, filter: { _id: to }, data: { $pop: { notifications: 1 } } })
         }
@@ -39,8 +41,9 @@ const pushNotify = async ({ to, from, message = "", gameId, type = "N" }) => {
         //add/update comment, add/update game, add rate
         const { activity } = await findById({ model: userModel, filter: to, select: "activity" })
         const { name } = await findById({ model: gameModel, filter: gameId, select: "name" })
+        const gameSlug = slugify(name).toLowerCase()
         const text = `${message} ${name}`
-        const active = { message: text, gameId }
+        const active = { message: text, gameId, gameSlug }
         if (activity.length >= 30) {
             await updateOne({ model: userModel, filter: { _id: to }, data: { $pop: { activity: 1 } } })
         }
