@@ -241,7 +241,7 @@ export const getUsers = asyncHandler(
         let users;
         if (userNameQ) {
             userNameQ = userNameQ?.toLowerCase();
-            users = await userModel.find({ userName: { $regex: `^${userNameQ}` }, isDeleted: false, isBlocked: false }).select(privateData + '-wishList').populate([
+            users = await userModel.find({ userName: { $regex: `^${userNameQ}` }, isDeleted: false, isBlocked: false }).select(privateData + ' -wishList').populate([
                 {
                     path: 'following',
                     select: 'firstName lastName userName'
@@ -251,7 +251,7 @@ export const getUsers = asyncHandler(
             if (req.user.role === roles.superAdmin) {
                 users = await userModel.find({}).select("-password -code -wishlist")
             } else {
-                users = await userModel.find({ isDeleted: false, isBlocked: false }).select(privateData + '-wishList').populate([
+                users = await userModel.find({ isDeleted: false, isBlocked: false }).select(privateData + ' -wishList').populate([
                     {
                         path: 'following',
                         select: 'firstName lastName userName'
