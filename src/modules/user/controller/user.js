@@ -146,7 +146,7 @@ export const addRole = asyncHandler(
             return next(Error('not registered account', { cause: 404 }));
         }
         const { role } = req.body;
-        const user = await updateOne({ model: userModel, filter: { _id: userId, role: { $ne: roles.superAdmin } }, data: { role } });
+        const user = await updateOne({ model: userModel, filter: { _id: userId }, data: { role } });
         return user.modifiedCount ? res.status(200).json({ message: "done" }) : next(Error("you don't have the permission", { cause: 403 }));
     }
 )
