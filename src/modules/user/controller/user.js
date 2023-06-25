@@ -249,7 +249,7 @@ export const getUsers = asyncHandler(
             ])
         } else {
             if (req.user.role === roles.superAdmin) {
-                users = await userModel.find({}).select("-password -code -wishlist")
+                users = await userModel.find({}).select("-password -code -wishlist -code -activity -notifications")
             } else {
                 users = await userModel.find({ isDeleted: false, isBlocked: false }).select(privateData + ' -wishList').populate([
                     {
