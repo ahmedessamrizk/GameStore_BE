@@ -230,7 +230,7 @@ export const getProfile = asyncHandler(
 export const signOut = asyncHandler(
     async (req, res, next) => {
         let date = new Date()
-        const result = await findOneAndUpdate({ model: userModel, filter: { _id: req.user._id }, data: { lastSeen: date, isOnline: false },options:{new:true} });
+        const result = await findOneAndUpdate({ model: userModel, filter: { _id: req.user._id }, data: { lastSeen: date, isOnline: false }, options: { new: true } });
         return res.status(200).json({ message: "done" });
     }
 )
@@ -238,13 +238,28 @@ export const signOut = asyncHandler(
 export const getUsers = asyncHandler(
     async (req, res, next) => {
         let { userNameQ } = req.query;
-        userNameQ = userNameQ?.toLowerCase();
-        let users = await userModel.find({ userName: { $regex: `^${userNameQ}` }, isDeleted: false, isBlocked: false }).select(privateData + '-wishList').populate([
-            {
-                path: 'following',
-                select: 'firstName lastName userName'
+        let users;
+        if (userNameQ) {
+            userNameQ = userNameQ?.toLowerCase();
+            users = await userModel.find({ userName: { $regex: `^${userNameQ}` }, isDeleted: false, isBlocked: false }).select(privateData + '-wishList').populate([
+                {
+                    path: 'following',
+                    select: 'firstName lastName userName'
+                }
+            ])
+        } else {
+            if (req.user.role === roles.superAdmin) {
+                users = await userModel.find({}).select("-password -code -wishlist")
+            } else {
+                users = await userModel.find({ isDeleted: false, isBlocked: false }).select(privateData + '-wishList').populate([
+                    {
+                        path: 'following',
+                        select: 'firstName lastName userName'
+                    }
+                ])
             }
-        ])
+
+        }
         users.forEach(user => {
             if (user.phone) {
                 user.phone = CryptoJS.AES.decrypt(user.phone, process.env.CRYPTPHONESECRET).toString(CryptoJS.enc.Utf8);
@@ -253,6 +268,7 @@ export const getUsers = asyncHandler(
         return res.status(200).json({ message: "done", users });
     }
 )
+
 
 export const AddToWishList = asyncHandler(
     async (req, res, next) => {
@@ -310,14 +326,14 @@ export const getActivities = asyncHandler(
     async (req, res, next) => {
         const { page, size } = req.query
         const { skip, limit } = paginate(page, size)
-        const user = await findById({ model: userModel, filter: { _id: req.user._id }, select: 'activity' , skip, limit});
+        const user = await findById({ model: userModel, filter: { _id: req.user._id }, select: 'activity', skip, limit });
         return res.status(200).json({ message: "done", user })
     }
 )
 
 export const getNotifications = asyncHandler(
     async (req, res, next) => {
-        const user = await findById({ model: userModel, filter: { _id: req.user._id }, select: 'notifications'});
+        const user = await findById({ model: userModel, filter: { _id: req.user._id }, select: 'notifications' });
         return res.status(200).json({ message: "done", user })
     }
 )
