@@ -133,7 +133,8 @@ export const unRemoveGame = asyncHandler(
 
 export const removeImage = asyncHandler(
     async (req, res, next) => {
-        const { publicId, gameId } = req.params
+        const { gameId } = req.params
+        const { publicId } = req.body
         const game = await findOne({ model: gameModel, filter: { _id: gameId, isDeleted: false, createdBy: req.user._id },select:"pics createdBy" })
         if (game) {
             const ownerId = JSON.stringify(game.createdBy._id)

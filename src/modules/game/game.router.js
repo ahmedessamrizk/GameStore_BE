@@ -29,7 +29,7 @@ router.post('/:gameId/add/pics',
     gameController.addGamePics
 )
 //remove an image
-router.patch('/:gameId/pics/remove/:publicId',
+router.patch('/:gameId/pics/remove',
     auth(gameRoles.A_SA),
     gameController.removeImage)
 
