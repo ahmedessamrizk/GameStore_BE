@@ -134,7 +134,7 @@ export const unRemoveGame = asyncHandler(
 export const removeImage = asyncHandler(
     async (req, res, next) => {
         const { publicId, gameId } = req.params
-        const game = await findOne({ model: gameModel, filter: { _id: gameId, isDeleted: false, createdBy: req.user._id } })
+        const game = await findOne({ model: gameModel, filter: { _id: gameId, isDeleted: false, createdBy: req.user._id },select:"pics createdBy" })
         if (game) {
             const ownerId = JSON.stringify(game.createdBy._id)
             const loggedUserId = JSON.stringify(req.user._id)
@@ -144,7 +144,7 @@ export const removeImage = asyncHandler(
                 await cloudinary.uploader.destroy(publicId)
                 if (updatedGame.modifiedCount) {
                     pushNotify({ to: req.user._id, message: activityMessages.removeGamePic, gameId, type: "A" })
-                    return res.status(200).json({ message: "done" });
+                    return res.status(200).json({ message: "done",game });
                 } else {
                     return next(Error("Something went wrong", { cause: 400 }))
                 }
