@@ -12,6 +12,7 @@ export const notifyMessages = { //addComment -  rate
 export const activityMessages = {
     addGame: "you have added game:",
     removeGame: "you have removed game:",
+    unRemoveGame: "you have unRemove game:",
     addGamePics: "you have added pictures for game:",
     addGameVid: "you have added a video for game:",
     updateGame: "you have updated game:",

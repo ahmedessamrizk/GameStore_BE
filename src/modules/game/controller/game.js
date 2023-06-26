@@ -108,6 +108,29 @@ export const removeGame = asyncHandler(
     }
 )
 
+export const unRemoveGame = asyncHandler(
+    async (req, res, next) => {
+        const { gameId } = req.params
+        const exists = await findOne({ model: gameModel, filter: { _id: gameId, createdBy: req.user._id, isDeleted: true } })
+        if (exists) {
+            const undelete = await updateOne({ model: gameModel, filter: { _id: gameId }, data: { isDeleted: false } })
+            if (undelete.modifiedCount) {
+                // exists.video ? cloudinary.uploader.destroy(exists.video.public_id, { resource_type: "video" }) : null
+                // exists.mainPic ? cloudinary.uploader.destroy(exists.mainPic.public_id) : null
+                // for (const pic of exists.pics) {
+                //     cloudinary.uploader.destroy(pic.public_id)
+                // }
+                pushNotify({ to: req.user._id, message: activityMessages.unRemoveGame, gameId, type: "A" })
+                return res.status(200).json({ message: "done" })
+            } else {
+                return next(Error("Something went wrong", { cause: 400 }))
+            }
+        } else {
+            return next(Error("Invalid Game ID"))
+        }
+    }
+)
+
 export const updateGame = asyncHandler(
     async (req, res, next) => {
         const { gameId } = req.params
