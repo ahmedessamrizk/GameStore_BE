@@ -135,17 +135,17 @@ export const removeImage = asyncHandler(
     async (req, res, next) => {
         const { gameId } = req.params
         const { publicId } = req.body
-        const game = await findOne({ model: gameModel, filter: { _id: gameId, isDeleted: false, createdBy: req.user._id },select:"pics createdBy" })
+        const game = await findOne({ model: gameModel, filter: { _id: gameId, isDeleted: false, createdBy: req.user._id }, select: "pics createdBy" })
         if (game) {
             const ownerId = JSON.stringify(game.createdBy._id)
             const loggedUserId = JSON.stringify(req.user._id)
 
             if (ownerId === loggedUserId) {//remove by owner
-                const updatedGame = await updateOne({ model: gameModel, filter: { _id: gameId }, data: { $pull: { pics: { public_id: publicId } } } })
+                const updatedGame = await findOneAndUpdate({ model: gameModel, filter: { _id: gameId }, data: { $pull: { pics: { public_id: publicId } } }, options: { new: true }, select: "pics" })
                 await cloudinary.uploader.destroy(publicId)
                 if (updatedGame.modifiedCount) {
                     pushNotify({ to: req.user._id, message: activityMessages.removeGamePic, gameId, type: "A" })
-                    return res.status(200).json({ message: "done",game });
+                    return res.status(200).json({ message: "done", game: updatedGame });
                 } else {
                     return next(Error("Something went wrong", { cause: 400 }))
                 }
@@ -156,7 +156,7 @@ export const removeImage = asyncHandler(
         } else {
             return next(Error("Invalid Game ID"))
         }
-        
+
     }
 )
 export const updateGame = asyncHandler(
