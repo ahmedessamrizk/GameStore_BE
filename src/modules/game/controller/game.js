@@ -143,7 +143,7 @@ export const removeImage = asyncHandler(
             if (ownerId === loggedUserId) {//remove by owner
                 const updatedGame = await findOneAndUpdate({ model: gameModel, filter: { _id: gameId }, data: { $pull: { pics: { public_id: publicId } } }, options: { new: true }, select: "pics" })
                 await cloudinary.uploader.destroy(publicId)
-                if (updatedGame.modifiedCount) {
+                if (updatedGame) {
                     pushNotify({ to: req.user._id, message: activityMessages.removeGamePic, gameId, type: "A" })
                     return res.status(200).json({ message: "done", game: updatedGame });
                 } else {
