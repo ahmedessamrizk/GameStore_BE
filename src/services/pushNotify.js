@@ -14,6 +14,7 @@ export const activityMessages = {
     removeGame: "you have removed game:",
     unRemoveGame: "you have unRemove game:",
     addGamePics: "you have added pictures for game:",
+    removeGamePic: "you have removed a picture for game:",
     addGameVid: "you have added a video for game:",
     updateGame: "you have updated game:",
     addComment: "you have added comment on game:",

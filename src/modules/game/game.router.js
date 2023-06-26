@@ -22,11 +22,17 @@ router.post('/add',
     auth(gameRoles.A_SA),
     gameController.addGame
 )
+//add image
 router.post('/:gameId/add/pics',
     myMulter(fileFormat.image).array('pics', 5),HME,
     auth(gameRoles.A_SA),
     gameController.addGamePics
 )
+//remove an image
+router.patch('/:gameId/pics/remove/:publicId',
+    auth(gameRoles.A_SA),
+    gameController.removeImage)
+
 router.post('/:gameId/add/video',
     myMulter(fileFormat.video).single('video'),HME,
     auth(gameRoles.A_SA),
@@ -43,6 +49,7 @@ router.put('/:gameId/update',
     myMulter(fileFormat.image).single('mainPic'),
     auth(gameRoles.A_SA),
     gameController.updateGame)
+
 
 //Get Game/s
 router.get("/all",gameController.getGames)
