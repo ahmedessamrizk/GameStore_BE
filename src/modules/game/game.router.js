@@ -35,6 +35,8 @@ router.post('/:gameId/add/video',
 
 //Delete Game
 router.patch('/:gameId/delete', auth(gameRoles.A_SA), gameController.removeGame)
+//unDelete Game
+router.patch('/:gameId/undelete', auth(gameRoles.A_SA), gameController.unRemoveGame)
 
 //Update Game
 router.put('/:gameId/update',
