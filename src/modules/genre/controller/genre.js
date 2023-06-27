@@ -147,8 +147,13 @@ export const deleteGenre = asyncHandler(
 
 export const getGenres = asyncHandler(
     async (req, res, next) => {
+    if(req.user.role ==roles.superAdmin){
+        const genres = await find({ model: genreModel })
+        return res.status(200).json({ message: "done", genres })
+    }else{
         const genres = await find({ model: genreModel, filter: { createdBy: req.user._id } })
         return res.status(200).json({ message: "done", genres })
+    }
     }
 )
 export const getGenresAll = asyncHandler(
