@@ -77,7 +77,7 @@ export const signIn = asyncHandler(
                 const { err, cause } = checkUser(user, ['isDeleted', 'isBlocked', 'confirmEmail']);
                 if (!err) {
                     const age = calcDate(user.DOB);
-                    await findByIdAndUpdate({ model: userModel, filter: { _id: user._id }, data: { isOnline: true, age, lastSeen: null }, select: "email" });
+                    await findByIdAndUpdate({ model: userModel, filter: { _id: user._id }, data: { isOnline: true, age, lastSeen: new Date }, select: "email" });
                     const token = jwt.sign({ id: user._id }, process.env.SIGNINKEY, { expiresIn: '12h' });
                     return res.status(200).json({ message: "done", token });
                 } else {
