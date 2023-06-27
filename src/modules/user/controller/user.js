@@ -337,4 +337,3 @@ export const getNotifications = asyncHandler(
         return res.status(200).json({ message: "done", user })
     }
 )
-

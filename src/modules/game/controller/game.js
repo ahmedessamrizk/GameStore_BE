@@ -324,3 +324,16 @@ export const getUserGames = asyncHandler(
 
     }
 )
+
+export const getRandomGame = asyncHandler(
+    async (req, res, next) => {
+        // res.json({message: "done"})
+        gameModel.count().exec(function (err, count) {
+            var random = Math.floor(Math.random() * count)
+            gameModel.findOne().skip(random).select('_id slug').exec(
+                function (err, result) {
+                    res.json({ message: "done", game: result })
+                })
+        })
+    }
+)
