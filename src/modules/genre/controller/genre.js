@@ -4,7 +4,7 @@ import { create, findById, findOne, updateOne, deleteOne, find } from './../../.
 import genreModel from './../../../../DB/models/genre.model.js';
 import { roles } from '../../../../DB/models/user.model.js';
 import cloudinary from './../../../services/cloudinary.js';
-import gameModel from './../../../../DB/models/game.model';
+import gameModel from './../../../../DB/models/game.model.js';
 
 const default_secure_url = "https://res.cloudinary.com/dpiwjrxdt/image/upload/v1678111117/genre/default_genre_bxfmjm.jpg"
 const default_public_id = "genre/default_genre_bxfmjm"
@@ -126,7 +126,7 @@ export const deleteGenre = asyncHandler(
             const loggedUserId = JSON.stringify(req.user._id)
 
             if (ownerId === loggedUserId || req.user.role === roles.superAdmin) {
-                const deletedGames = await gameModel.deleteMany({ genreId })
+                await gameModel.deleteMany({genreId})
                 const deleted = await deleteOne({ model: genreModel, filter: { _id: genreId }, data: req.body })
                 if (deleted.deletedCount) {
                     if (genre.image.public_id !== default_public_id) {
