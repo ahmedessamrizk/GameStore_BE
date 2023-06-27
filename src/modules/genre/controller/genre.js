@@ -147,7 +147,7 @@ export const deleteGenre = asyncHandler(
 
 export const getGenres = asyncHandler(
     async (req, res, next) => {
-        const genres = await find({ model: genreModel, createdBy: req.user._id })
+        const genres = await find({ model: genreModel, filter: { createdBy: req.user._id } })
         return res.status(200).json({ message: "done", genres })
     }
 )
