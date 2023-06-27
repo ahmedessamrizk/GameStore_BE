@@ -108,6 +108,57 @@ export const removeGame = asyncHandler(
     }
 )
 
+export const unRemoveGame = asyncHandler(
+    async (req, res, next) => {
+        const { gameId } = req.params
+        const exists = await findOne({ model: gameModel, filter: { _id: gameId, createdBy: req.user._id, isDeleted: true } })
+        if (exists) {
+            const undelete = await updateOne({ model: gameModel, filter: { _id: gameId }, data: { isDeleted: false } })
+            if (undelete.modifiedCount) {
+                // exists.video ? cloudinary.uploader.destroy(exists.video.public_id, { resource_type: "video" }) : null
+                // exists.mainPic ? cloudinary.uploader.destroy(exists.mainPic.public_id) : null
+                // for (const pic of exists.pics) {
+                //     cloudinary.uploader.destroy(pic.public_id)
+                // }
+                pushNotify({ to: req.user._id, message: activityMessages.unRemoveGame, gameId, type: "A" })
+                return res.status(200).json({ message: "done" })
+            } else {
+                return next(Error("Something went wrong", { cause: 400 }))
+            }
+        } else {
+            return next(Error("Invalid Game ID"))
+        }
+    }
+)
+
+export const removeImage = asyncHandler(
+    async (req, res, next) => {
+        const { gameId } = req.params
+        const { publicId } = req.body
+        const game = await findOne({ model: gameModel, filter: { _id: gameId, isDeleted: false, createdBy: req.user._id }, select: "pics createdBy" })
+        if (game) {
+            const ownerId = JSON.stringify(game.createdBy._id)
+            const loggedUserId = JSON.stringify(req.user._id)
+
+            if (ownerId === loggedUserId) {//remove by owner
+                const updatedGame = await findOneAndUpdate({ model: gameModel, filter: { _id: gameId }, data: { $pull: { pics: { public_id: publicId } } }, options: { new: true }, select: "pics" })
+                await cloudinary.uploader.destroy(publicId)
+                if (updatedGame) {
+                    pushNotify({ to: req.user._id, message: activityMessages.removeGamePic, gameId, type: "A" })
+                    return res.status(200).json({ message: "done", game: updatedGame });
+                } else {
+                    return next(Error("Something went wrong", { cause: 400 }))
+                }
+            } else {
+                return next(Error("You don't have the permission", { cause: 403 }))
+            }
+
+        } else {
+            return next(Error("Invalid Game ID"))
+        }
+
+    }
+)
 export const updateGame = asyncHandler(
     async (req, res, next) => {
         const { gameId } = req.params
@@ -263,13 +314,26 @@ export const getUserGames = asyncHandler(
         const { userId } = req.params
         if (userId) {
             const games = await find({
-                model: gameModel, filter: { createdBy:userId }, populate: [{ path: "genreId", },],
+                model: gameModel, filter: { createdBy: userId }, populate: [{ path: "genreId", },],
             })
-            
+
             return res.status(200).json({ message: "done", games })
-        }else{
+        } else {
             return next(Error("In-valid user ID", { cause: 404 }))
         }
 
+    }
+)
+
+export const getRandomGame = asyncHandler(
+    async (req, res, next) => {
+        // res.json({message: "done"})
+        gameModel.count().exec(function (err, count) {
+            var random = Math.floor(Math.random() * count)
+            gameModel.findOne().skip(random).select('_id slug').exec(
+                function (err, result) {
+                    res.json({ message: "done", game: result })
+                })
+        })
     }
 )
