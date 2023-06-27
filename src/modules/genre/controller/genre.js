@@ -1,6 +1,6 @@
 import slugify from 'slugify';
 import { asyncHandler } from './../../../middleware/asyncHandler.js';
-import { create, findById, findOne, updateOne, deleteOne } from './../../../../DB/DBmethods.js';
+import { create, findById, findOne, updateOne, deleteOne, find } from './../../../../DB/DBmethods.js';
 import genreModel from './../../../../DB/models/genre.model.js';
 import { roles } from '../../../../DB/models/user.model.js';
 import cloudinary from './../../../services/cloudinary.js';
@@ -140,5 +140,12 @@ export const deleteGenre = asyncHandler(
         } else {
             return next(Error("Invalid genre ID", { cause: 404 }))
         }
+    }
+)
+
+export const getGenres = asyncHandler(
+    async (req, res, next) => {
+        const genres = await find({ model: genreModel })
+        return res.status(200).json({ message: "done", genres })
     }
 )
