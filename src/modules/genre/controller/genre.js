@@ -151,3 +151,9 @@ export const getGenres = asyncHandler(
         return res.status(200).json({ message: "done", genres })
     }
 )
+export const getGenresAll = asyncHandler(
+    async (req, res, next) => {
+        const genres = await find({ model: genreModel })
+        return res.status(200).json({ message: "done", genres })
+    }
+)

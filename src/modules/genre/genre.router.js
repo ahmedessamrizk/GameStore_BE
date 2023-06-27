@@ -8,7 +8,8 @@ import * as validators from './genre.validation.js'
 
 const router = Router();
 
-router.get("/all", genreController.getGenres)
+router.get("/all", auth(genreRoles.get),genreController.getGenres)
+router.get("/all/view", genreController.getGenresAll)
 router.post("/add", myMulter(fileFormat.image).single('image'), HME,validation(validators.add), auth(genreRoles.add), genreController.addGenre)
 //router.post("/add/:genreId/image", myMulter(fileFormat.image).single('image'), validation(validators.image), auth(genreRoles.add), genreController.addImage)
 router.put("/update/:genreId", myMulter(fileFormat.image).single('image'), HME,validation(validators.update), auth(genreRoles.update), genreController.updateGenre)
