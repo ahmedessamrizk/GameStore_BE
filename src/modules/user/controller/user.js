@@ -205,7 +205,7 @@ export const getProfile = asyncHandler(
                 populate: [
                     {
                         path: 'following',
-                        select: 'firstName lastName userName'
+                        select: 'firstName lastName userName profilePic isBlocked isDeleted'
                     }
 
                 ]
@@ -216,14 +216,26 @@ export const getProfile = asyncHandler(
                 populate: [
                     {
                         path: 'following',
-                        select: 'firstName lastName userName profilePic'
+                        select: 'firstName lastName userName profilePic isBlocked isDeleted'
                     }
                 ]
             })
         }
-        const bytes = CryptoJS.AES.decrypt(user.phone, process.env.CRYPTPHONESECRET);
-        user.phone = bytes.toString(CryptoJS.enc.Utf8);
-        return res.status(200).json({ message: "done", user })
+        if(user.phone){
+            const bytes = CryptoJS.AES.decrypt(user.phone, process.env.CRYPTPHONESECRET);
+            user.phone = bytes.toString(CryptoJS.enc.Utf8);
+        }
+        let result = JSON.stringify(user);
+        result = JSON.parse(result);
+        for(let i = 0;i < result.following.length;i++){
+            if(result.following[i].isDeleted === true || result.following[i].isBlocked === true){
+
+                result.following.splice(i,1);
+                i--;
+            }
+        }
+        
+        return res.status(200).json({ message: "done", user:result })
     }
 )
 
