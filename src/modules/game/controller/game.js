@@ -249,8 +249,11 @@ export const getGame = asyncHandler(
 export const getGames = asyncHandler(
     async (req, res, next) => {
         //pagination 
-        const { page, size } = req.query
+        let { page, size } = req.query
         const { skip, limit } = paginate(page, size)
+        if (!size) {
+            size = 20;
+        }
 
         //sort
         let { avgRate, price, alpha, released, lastAdded } = req.query
@@ -304,8 +307,8 @@ export const getGames = asyncHandler(
             ],
             sort
         })
-
-        return res.status(200).json({ message: "done", games })
+        const pages = Math.round(games.length / size);
+        return res.status(200).json({ message: "done",pages, games })
     }
 )
 
@@ -318,7 +321,7 @@ export const getUserGames = asyncHandler(
                     {
                         path: "createdBy",
                         select: privateData + " -phone -email -DOB -wishList -following -coverPics -createdAt -updatedAt -notifications"
-    
+
                     },
                     {
                         path: "genreId",
