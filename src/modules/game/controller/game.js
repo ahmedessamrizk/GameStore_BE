@@ -307,7 +307,11 @@ export const getGames = asyncHandler(
             ],
             sort
         })
-        const pages = Math.round(games.length / size);
+        let totalGames;
+         gameModel.count().exec(function (err, count) {        
+            totalGames=count
+        })
+        const pages = Math.round(totalGames / size);
         return res.status(200).json({ message: "done",pages, games })
     }
 )
@@ -339,14 +343,14 @@ export const getUserGames = asyncHandler(
 
 export const getRandomGame = asyncHandler(
     async (req, res, next) => {
-        console.log("first")
+        // console.log("first")
         // res.json({message: "done"})
         gameModel.count().exec(function (err, count) {
             var random = Math.floor(Math.random() * count)
             gameModel.findOne().skip(random).select('_id slug').exec(
                 function (err, result) {
                     console.log(result)
-                    res.json({ message: "done", game: result })
+                    return res.json({ message: "done", game: result })
                 })
         })
     }
