@@ -151,27 +151,30 @@ export const googleFail = asyncHandler(
 
 export const googleSign = asyncHandler(
     async (req, res, next) => {
+        let message;
         const { provider, displayName, given_name, family_name,
             email_verified, email, picture, id } = req.user
         if (!email_verified) {
-            return next(Error("In-valid google account", { cause: 400 }))
+            return res.redirect(`http://localhost:3000/googleOauth/?message=error`);
+
         }
         const user = await findOne({ model: userModel, filter: { email } })
         if (user) {
             const { err, cause } = checkUser(user, ['isDeleted isBlocked']);
             if (err) {
-                return next(Error(err, { cause }));
+                return res.redirect(`http://localhost:3000/googleOauth/?message=error`);
             }
             await findByIdAndUpdate({ model: userModel, filter: { _id: user._id }, data: { isOnline: true }, select: "email" });
             const token = jwt.sign({ id: user._id },
                 process.env.SIGNINKEY, { expiresIn: '12h' })
-            return res.json({ message: "done", token })
+                return res.redirect(`http://localhost:3000/googleOauth/?message=done&token=${token}` );
         }
         //Random password
         const code = nanoid();
         const hash = bcrypt.hashSync(code, +process.env.SALTROUND)
         // signup
         const userName = email.split('@')[0] + id;
+        const profilePic = { secure_url: secureURL, public_id: defaultPublicId } 
         const newUser = await userModel.create({
             userName,
             firstName: given_name,
@@ -180,10 +183,12 @@ export const googleSign = asyncHandler(
             confirmEmail: true,
             accountType: provider,
             password: hash,
-            DOB: Date.now()
+            DOB: Date.now(),
+            profilePic
         })
-        await cloudinary.uploader.upload(picture, { folder: `Users/${userName}-${newUser._id}/profilePic` })
+        
         const token = jwt.sign({ id: newUser._id, isOnline: true }, process.env.SIGNINKEY)
-        return res.json({ message: "done", token })
+        return res.redirect(`http://localhost:3000/googleOauth/?message=done&token=${token}`);
+
     }
 )

@@ -201,6 +201,7 @@ export const updateGame = asyncHandler(
 export const getGame = asyncHandler(
     async (req, res, next) => {
         const { gameId } = req.params
+        console.log(gameId)
         const { userid } = req.headers
         let userRate;
         if (userid) {
@@ -224,13 +225,9 @@ export const getGame = asyncHandler(
             ]
         })
         if (game) {
+            console.log("yeeeeeeeeeeees")
             game.toObject()
-            const de_phone = CryptoJS.AES.decrypt(game.createdBy.phone, process.env.CRYPTPHONESECRET).toString(CryptoJS.enc.Utf8);
-            if (game.updatedBy?.phone) {
-                const de_phone_2 = CryptoJS.AES.decrypt(game.updatedBy.phone, process.env.CRYPTPHONESECRET).toString(CryptoJS.enc.Utf8);
-                game.updatedBy.phone = de_phone_2
-            }
-            game.createdBy.phone = de_phone
+            
             let result;
             if (userid) {
                 result = JSON.stringify(game);
@@ -349,7 +346,6 @@ export const getRandomGame = asyncHandler(
             var random = Math.floor(Math.random() * count)
             gameModel.findOne().skip(random).select('_id slug').exec(
                 function (err, result) {
-                    console.log(result)
                     return res.json({ message: "done", game: result })
                 })
         })
