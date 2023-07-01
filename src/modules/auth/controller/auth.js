@@ -20,6 +20,8 @@ export const signUp = asyncHandler(
         let { email, userName } = req.body;
         userName = userName.toLowerCase()
         email = email.toLowerCase();
+        req.body.email = email
+        req.body.userName = userName        
         const checkEmail = await findOne({ model: userModel, filter: { email }, select: "email" });
         if (!checkEmail) {
             const checkUserName = await findOne({ model: userModel, filter: { userName }, select: "userName" });
