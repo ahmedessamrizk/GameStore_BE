@@ -4,7 +4,7 @@ import slugify from 'slugify'
 import { create, findOne, updateOne, findOneAndUpdate, find } from './../../../../DB/DBmethods.js';
 import gameModel from './../../../../DB/models/game.model.js';
 import cloudinary from './../../../services/cloudinary.js';
-import userModel from '../../../../DB/models/user.model.js';
+import userModel, { roles } from '../../../../DB/models/user.model.js';
 import pushNotify, { activityMessages } from '../../../services/pushNotify.js';
 import { privateData } from './../../user/controller/user.js';
 import CryptoJS from 'crypto-js';
@@ -88,7 +88,13 @@ export const addGamePics = asyncHandler(
 export const removeGame = asyncHandler(
     async (req, res, next) => {
         const { gameId } = req.params
-        const exists = await findOne({ model: gameModel, filter: { _id: gameId, createdBy: req.user._id, isDeleted: false } })
+        let exists;
+        if (req.user.role === roles.superAdmin) {
+            exists = await findOne({ model: gameModel, filter: { _id: gameId, isDeleted: false } })
+        } else {
+            exists = await findOne({ model: gameModel, filter: { _id: gameId, isDeleted: false } })
+        }
+
         if (exists) {
             const deletedGame = await updateOne({ model: gameModel, filter: { _id: gameId }, data: { isDeleted: true } })
             if (deletedGame.modifiedCount) {
@@ -111,7 +117,12 @@ export const removeGame = asyncHandler(
 export const unRemoveGame = asyncHandler(
     async (req, res, next) => {
         const { gameId } = req.params
-        const exists = await findOne({ model: gameModel, filter: { _id: gameId, createdBy: req.user._id, isDeleted: true } })
+        let exists;
+        if (req.user.role === roles.superAdmin) {
+            exists = await findOne({ model: gameModel, filter: { _id: gameId, isDeleted: true } })
+        } else {
+            exists = await findOne({ model: gameModel, filter: { _id: gameId, isDeleted: true } })
+        }
         if (exists) {
             const undelete = await updateOne({ model: gameModel, filter: { _id: gameId }, data: { isDeleted: false } })
             if (undelete.modifiedCount) {
@@ -227,7 +238,7 @@ export const getGame = asyncHandler(
         if (game) {
             console.log("yeeeeeeeeeeees")
             game.toObject()
-            
+
             let result;
             if (userid) {
                 result = JSON.stringify(game);
@@ -249,7 +260,7 @@ export const getGames = asyncHandler(
         let { page, size } = req.query
         const { skip, limit } = paginate(page, size)
         if (!size) {
-            size = 20;
+            size = 18;
         }
 
         //sort
@@ -276,7 +287,7 @@ export const getGames = asyncHandler(
 
         //filter by
         let { genre, search } = req.query
-        const filter = { }
+        const filter = {}
         if (genre) {
             genre = genre.toLowerCase()
             const searchByGenre = await findOne({ model: genreModel, filter: { slug: genre, isDeleted: false }, select: "_id" })
