@@ -291,7 +291,7 @@ export const getGames = asyncHandler(
         }
 
         const games = await find({
-            model: gameModel, filter, select: "-isDeleted -updatedBy", skip, limit,
+            model: gameModel, filter, select: "-updatedBy", skip, limit,
             populate: [
                 {
                     path: "createdBy",
