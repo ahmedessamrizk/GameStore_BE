@@ -87,13 +87,20 @@ export const deleteUser = asyncHandler(
         }
         let deleteUser;
         //user can delete or block his account
-        if (userId == req.user._id) {
-            deleteUser = await updateOne({ model: userModel, filter: { _id: userId }, data: { isDeleted: true } });
+        if (userId == req.user?._id) {
+            const games = await gameModel.updateMany({createdBy:user._id},{isDeleted:true});
+            if (games) {
+                deleteUser = await updateOne({ model: userModel, filter: { _id: userId }, data: { isDeleted: true } }); 
+            } 
         } else {//superAdmin can delete or block anyone
             if (req.user.role == roles.superAdmin) {
-                deleteUser = await updateOne({ model: userModel, filter: { _id: userId, role: { $ne: roles.superAdmin } }, data: { isDeleted: true } });
+                const games = await gameModel.updateMany({createdBy:user._id},{isDeleted:true});
+                if (games) {
+                    deleteUser = await updateOne({ model: userModel, filter: { _id: userId, role: { $ne: roles.superAdmin } }, data: { isDeleted: true } });
+                }
             }
         }
+       
         return deleteUser?.modifiedCount ? res.status(200).json({ message: "done" }) : next(Error("you don't have the permission", { cause: 403 }));
     }
 )
@@ -108,7 +115,12 @@ export const unDeleteUser = asyncHandler(
             return next(Error(err, { cause }));
         }
         const deleteUser = await updateOne({ model: userModel, filter: { _id: userId, role: { $ne: roles.superAdmin } }, data: { isDeleted: false } });
-        return deleteUser?.modifiedCount ? res.status(200).json({ message: "done" }) : next(Error("you don't have the permission", { cause: 403 }));
+        if (deleteUser?.modifiedCount) {
+            await gameModel.updateMany({createdBy:user._id, isDeleted:true},{isDeleted:false});
+            return res.status(200).json({ message: "done" })
+        } else {
+            return next(Error("you don't have the permission", { cause: 403 }))
+        }
     }
 )
 
@@ -121,7 +133,12 @@ export const blockUser = asyncHandler(
             return next(Error(err, { cause }));
         }
         const deleteUser = await updateOne({ model: userModel, filter: { _id: userId, role: { $ne: roles.superAdmin } }, data: { isBlocked: true } });
-        return deleteUser?.modifiedCount ? res.status(200).json({ message: "done" }) : next(Error("you don't have the permission", { cause: 403 }));
+        if (deleteUser?.modifiedCount) {
+            await gameModel.updateMany({createdBy:user._id},{isDeleted:true});
+            return res.status(200).json({ message: "done" })
+        } else {
+            return next(Error("you don't have the permission", { cause: 403 }))
+        }
     }
 )
 
@@ -134,7 +151,13 @@ export const unBlockUser = asyncHandler(
             return next(Error(err, { cause }));
         }
         const deleteUser = await updateOne({ model: userModel, filter: { _id: userId, role: { $ne: roles.superAdmin } }, data: { isBlocked: false } });
-        return deleteUser?.modifiedCount ? res.status(200).json({ message: "done" }) : next(Error("you don't have the permission", { cause: 403 }));
+        if (deleteUser.modifiedCount) {
+            await gameModel.updateMany({createdBy:user._id, isDeleted:true},{isDeleted:false});
+            return res.status(200).json({ message: "done" })
+        } else {
+            return next(Error("you don't have the permission", { cause: 403 }))
+        }
+        // return deleteUser?.modifiedCount ? res.status(200).json({ message: "done" }) : next(Error("you don't have the permission", { cause: 403 }));
     }
 )
 
