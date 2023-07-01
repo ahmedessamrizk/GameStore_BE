@@ -308,7 +308,7 @@ export const getGames = asyncHandler(
             sort
         })
 
-        gameModel.count().exec(function (err, count) {
+        gameModel.count().exec(filter,function (err, count) {
             let totalGames = count
             const pages = Math.ceil(totalGames / size);
 
