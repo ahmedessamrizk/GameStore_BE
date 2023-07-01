@@ -254,7 +254,7 @@ export const getGame = asyncHandler(
     }
 )
 
-export const getGames = asyncHandler(
+export const getHomeGames = asyncHandler(
     async (req, res, next) => {
         //pagination 
         let { page, size } = req.query
@@ -300,6 +300,35 @@ export const getGames = asyncHandler(
         if (search) {
             filter.name = { $regex: `${search}`, $options: 'i' }
         }
+
+        filter.isDeleted = false;
+        const games = await find({
+            model: gameModel, filter, select: "-updatedBy", skip, limit,
+            populate: [
+                {
+                    path: "createdBy",
+                    select: privateData + " -phone -email -DOB -wishList -following -coverPics -createdAt -updatedAt -notifications"
+
+                },
+                {
+                    path: "genreId",
+                },
+            ],
+            sort
+        })
+        gameModel.count(filter).exec(function (err, count) {
+            let totalGames = count
+            const pages = Math.ceil(totalGames / size);
+            return res.status(200).json({ message: "done", pages, games })
+        })
+    }
+)
+
+export const getGamesControl = asyncHandler(
+    async (req, res, next) => {
+
+        //filter by
+        const filter = {}
 
         const games = await find({
             model: gameModel, filter, select: "-updatedBy", skip, limit,

@@ -52,7 +52,8 @@ router.put('/:gameId/update',
 
 
 //Get Game/s
-router.get("/all", gameController.getGames)
+router.get("/all/control", gameController.getGamesControl)
+router.get("/all", gameController.getHomeGames)
 router.get("/random", gameController.getRandomGame)
 router.get("/:gameId", gameController.getGame)
 router.get("/user/:userId", gameController.getUserGames)
