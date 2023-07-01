@@ -327,11 +327,8 @@ export const getHomeGames = asyncHandler(
 export const getGamesControl = asyncHandler(
     async (req, res, next) => {
 
-        //filter by
-        const filter = {}
-
         const games = await find({
-            model: gameModel, filter, select: "-updatedBy", skip, limit,
+            model: gameModel,
             populate: [
                 {
                     path: "createdBy",
@@ -342,14 +339,9 @@ export const getGamesControl = asyncHandler(
                     path: "genreId",
                 },
             ],
-            sort
         })
-        filter.isDeleted = false;
-        gameModel.count(filter).exec(function (err, count) {
-            let totalGames = count
-            const pages = Math.ceil(totalGames / size);
-            return res.status(200).json({ message: "done", pages, games })
-        })
+        return res.status(200).json({ message: "done", games })
+
     }
 )
 
