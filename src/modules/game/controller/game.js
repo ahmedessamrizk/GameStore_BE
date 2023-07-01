@@ -276,7 +276,7 @@ export const getGames = asyncHandler(
 
         //filter by
         let { genre, search } = req.query
-        const filter = { isDeleted: false }
+        const filter = { }
         if (genre) {
             genre = genre.toLowerCase()
             const searchByGenre = await findOne({ model: genreModel, filter: { slug: genre, isDeleted: false }, select: "_id" })
@@ -304,7 +304,7 @@ export const getGames = asyncHandler(
             ],
             sort
         })
-
+        filter.isDeleted = false;
         gameModel.count(filter).exec(function (err, count) {
             let totalGames = count
             const pages = Math.ceil(totalGames / size);
