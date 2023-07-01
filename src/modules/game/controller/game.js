@@ -318,7 +318,7 @@ export const getUserGames = asyncHandler(
         const { userId } = req.params
         if (userId) {
             const games = await find({
-                model: gameModel, filter: { createdBy: userId, isDeleted:false }, populate: [
+                model: gameModel, filter: { createdBy: userId }, populate: [
                     {
                         path: "createdBy",
                         select: privateData + " -phone -email -DOB -wishList -following -coverPics -createdAt -updatedAt -notifications"
