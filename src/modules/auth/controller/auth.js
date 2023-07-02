@@ -177,6 +177,8 @@ export const googleSign = asyncHandler(
         // signup
         const userName = email.split('@')[0] + id;
         const profilePic = { secure_url: secureURL, public_id: defaultPublicId } 
+        const DOB = new Date("2000-03-25")
+        const age = calcDate(DOB);
         const newUser = await userModel.create({
             userName,
             firstName: given_name,
@@ -185,7 +187,8 @@ export const googleSign = asyncHandler(
             confirmEmail: true,
             accountType: provider,
             password: hash,
-            DOB: Date.now(),
+            DOB,
+            age,
             profilePic
         })
         
