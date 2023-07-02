@@ -341,7 +341,7 @@ export const getWishList = asyncHandler(
             model: userModel, filter: { _id: req.user._id }, select: 'wishList', populate: [
                 {
                     path: 'wishList',
-                    select: 'mainPic name desc price slug isDeleted'
+                    select: 'mainPic name desc price slug'
                 }
             ]
         });
