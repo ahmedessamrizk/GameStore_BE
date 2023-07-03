@@ -223,8 +223,8 @@ export const getProfile = asyncHandler(
         let user;
         //anotherUser
         if (id) {
-            user = await findById({
-                model: userModel, filter: { _id: id }, select: privateData + '-wishList',
+            user = await findOne({
+                model: userModel, filter: { _id: id, isDeleted: false, isBlocked: false }, select: privateData + '-wishList',
                 populate: [
                     {
                         path: 'following',
@@ -258,7 +258,7 @@ export const getProfile = asyncHandler(
             }
         }
         
-        return res.status(200).json({ message: "done", user:result })
+        return user ?  res.status(200).json({ message: "done", user:result }) : res.status(404).json({message: "user is not found"});
     }
 )
 

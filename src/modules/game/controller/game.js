@@ -374,9 +374,9 @@ export const getRandomGame = asyncHandler(
     async (req, res, next) => {
         // console.log("first")
         // res.json({message: "done"})
-        gameModel.count().exec(function (err, count) {
+        gameModel.count({isDeleted:false}).exec(function (err, count) {
             var random = Math.floor(Math.random() * count)
-            gameModel.findOne().skip(random).select('_id slug').exec(
+            gameModel.findOne({isDeleted:false}).skip(random).select('_id slug').exec(
                 function (err, result) {
                     return res.json({ message: "done", game: result })
                 })
