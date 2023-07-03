@@ -57,7 +57,7 @@ export const confirmEmail = asyncHandler(
             const profilePic = { secure_url: secureURL, public_id: defaultPublicId }
             const user = await findOneAndUpdate({ model: userModel, filter: { email: decoded.email, confirmEmail: false }, data: { confirmEmail: true, profilePic }, select: 'confirmEmail email', options: { new: true } });
             if (user) {
-                return process.env.MODE == "DEV" ? res.redirect(`${process.env.frontendBaseURL}/login`) : res.redirect(process.env.HEADERSHOST);
+                return process.env.MODE == "DEV" ? res.status(200).json({ message: "done" }) : res.redirect(process.env.HEADERSHOST);
             } else {
                 return next(Error('Email already confirmed', { cause: 400 }));
             }
