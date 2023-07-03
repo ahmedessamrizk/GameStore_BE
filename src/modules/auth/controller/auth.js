@@ -157,19 +157,19 @@ export const googleSign = asyncHandler(
         const { provider, displayName, given_name, family_name,
             email_verified, email, picture, id } = req.user
         if (!email_verified) {
-            return res.redirect(`${process.env.frontendBaseURL}/googleOauth/?message=error`);
+            return res.redirect(`${process.env.frontendBaseURL}/googleOAuth/?message=error`);
 
         }
         const user = await findOne({ model: userModel, filter: { email } })
         if (user) {
             const { err, cause } = checkUser(user, ['isDeleted isBlocked']);
             if (err) {
-                return res.redirect(`${process.env.frontendBaseURL}/googleOauth/?message=error`);
+                return res.redirect(`${process.env.frontendBaseURL}/googleOAuth/?message=error`);
             }
             await findByIdAndUpdate({ model: userModel, filter: { _id: user._id }, data: { isOnline: true }, select: "email" });
             const token = jwt.sign({ id: user._id },
                 process.env.SIGNINKEY, { expiresIn: '12h' })
-                return res.redirect(`${process.env.frontendBaseURL}/googleOauth/?message=done&token=${token}` );
+                return res.redirect(`${process.env.frontendBaseURL}/googleOAuth/?message=done&token=${token}` );
         }
         //Random password
         const code = nanoid();
