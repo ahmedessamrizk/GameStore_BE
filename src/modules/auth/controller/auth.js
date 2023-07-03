@@ -57,9 +57,9 @@ export const confirmEmail = asyncHandler(
             const profilePic = { secure_url: secureURL, public_id: defaultPublicId }
             const user = await findOneAndUpdate({ model: userModel, filter: { email: decoded.email, confirmEmail: false }, data: { confirmEmail: true, profilePic }, select: 'confirmEmail email', options: { new: true } });
             if (user) {
-                return process.env.MODE == "DEV" ? res.status(200).json({ message: "done" }) : res.redirect(process.env.HEADERSHOST);
+                return process.env.MODE == "DEV" ? res.status(200).json({ message: "done" }) : res.redirect(process.env.frontendBaseURL);
             } else {
-                return next(Error('Email already confirmed', { cause: 400 }));
+                return res.redirect(process.env.frontendBaseURL)
             }
         } else {
             return next(Error('Invalid token payload', { cause: 400 }));
@@ -157,19 +157,19 @@ export const googleSign = asyncHandler(
         const { provider, displayName, given_name, family_name,
             email_verified, email, picture, id } = req.user
         if (!email_verified) {
-            return res.redirect(`${process.env.frontendBaseURL}/googleOauth/?message=error`);
+            return res.redirect(`${process.env.frontendBaseURL}/?message=error`);
 
         }
         const user = await findOne({ model: userModel, filter: { email } })
         if (user) {
             const { err, cause } = checkUser(user, ['isDeleted isBlocked']);
             if (err) {
-                return res.redirect(`${process.env.frontendBaseURL}/googleOauth/?message=error`);
+                return res.redirect(`${process.env.frontendBaseURL}/?message=error`);
             }
             await findByIdAndUpdate({ model: userModel, filter: { _id: user._id }, data: { isOnline: true }, select: "email" });
             const token = jwt.sign({ id: user._id },
                 process.env.SIGNINKEY, { expiresIn: '12h' })
-                return res.redirect(`${process.env.frontendBaseURL}/googleOauth/?message=done&token=${token}` );
+                return res.redirect(`${process.env.frontendBaseURL}/?message=done&token=${token}` );
         }
         //Random password
         const code = nanoid();
