@@ -27,6 +27,7 @@ router.patch('/wishlist/add/:gameId', validation(userValidators.addToWishList), 
 router.patch('/wishlist/remove/:gameId', validation(userValidators.addToWishList), auth(userRoles.update), userController.removeFromWishList);
 router.get('/activity', auth(userRoles.update), userController.getActivities);
 router.get('/notifications', auth(userRoles.update), userController.getNotifications);
+router.get('/notifyCount', auth(userRoles.update), userController.getNotifyCount);
 router.get('/wishlist', auth(userRoles.update), userController.getWishList);
 
 

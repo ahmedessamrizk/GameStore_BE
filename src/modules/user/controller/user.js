@@ -224,7 +224,7 @@ export const getProfile = asyncHandler(
         //anotherUser
         if (id) {
             user = await findOne({
-                model: userModel, filter: { _id: id, isDeleted: false, isBlocked: false }, select: privateData + '-wishList',
+                model: userModel, filter: { _id: id, isDeleted: false, isBlocked: false }, select: privateData + ' -wishList',
                 populate: [
                     {
                         path: 'following',
@@ -375,3 +375,11 @@ export const getNotifications = asyncHandler(
     }
 )
 
+
+export const getNotifyCount = asyncHandler(
+    async (req, res, next) => {
+        const user = await findById({ model: userModel, filter: { _id: req.user._id }, select: 'notifyCount' });
+        return user?  res.status(200).json({ message: "done", notifyCount: user.notifyCount }) : res.status(404).json({ message: "not found"})
+        
+    }
+)
