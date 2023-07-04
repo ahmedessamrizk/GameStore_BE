@@ -26,16 +26,17 @@ export const activityMessages = {
 const pushNotify = async ({ to, from, message = "", gameId, type = "N" }) => {
     //type => notifications || activity
     if (type == "N") {
-        const { firstName, lastName } = await findById({ model: userModel, filter: from, select: "firstName lastName" })
-        const { notifications } = await findById({ model: userModel, filter: to, select: "notifications" })
+        const { firstName, lastName } = await findById({ model: userModel, filter: from, select: "firstName lastName " })
+        let { notifications, notifyCount } = await findById({ model: userModel, filter: to, select: "notifications notifyCount" })
         const { name } = await findById({ model: gameModel, filter: gameId, select: "name" })
         const gameSlug = slugify(name).toLowerCase()
         const text = `${firstName} ${lastName} ${message} ${name} `
         const notify = { message: text, gameId, gameSlug }
+        notifyCount++;
         if (notifications.length >= 30) {
-            await updateOne({ model: userModel, filter: { _id: to }, data: { $pop: { notifications: 1 } } })
+            await updateOne({ model: userModel, filter: { _id: to }, data: { $pop: { notifications: 1 } , notifyCount} })
         }
-        const push = await updateOne({ model: userModel, filter: { _id: to }, data: { $push: { notifications: { $each: [notify], $position: 0 } } } })
+        const push = await updateOne({ model: userModel, filter: { _id: to }, data: { $push: { notifications: { $each: [notify], $position: 0 } }, notifyCount } })
         if (process.env.MODE == "DEV") {
             push.modifiedCount ? console.log("Notification Pushed") : console.log("Error while pushing Notification")
         }

@@ -30,4 +30,5 @@ router.get('/notifications', auth(userRoles.update), userController.getNotificat
 router.get('/wishlist', auth(userRoles.update), userController.getWishList);
 
 
+
 export default router

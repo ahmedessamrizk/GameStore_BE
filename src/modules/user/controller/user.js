@@ -369,6 +369,9 @@ export const getActivities = asyncHandler(
 export const getNotifications = asyncHandler(
     async (req, res, next) => {
         const user = await findById({ model: userModel, filter: { _id: req.user._id }, select: 'notifications' });
+        let notifyCount = 0;
+        await updateOne({ model: userModel, filter: { _id: req.user._id },data:{notifyCount} });
         return res.status(200).json({ message: "done", user })
     }
 )
+

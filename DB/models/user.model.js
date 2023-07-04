@@ -106,6 +106,10 @@ const userSchema = new Schema({
     code: {
         type: String,
         default: null
+    },
+    notifyCount: {
+        type: Number,
+        default: 0
     }
 
 }, {
